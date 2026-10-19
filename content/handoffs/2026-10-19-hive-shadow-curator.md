@@ -22,3 +22,23 @@ For a fresh agent. Nothing here votes, signs or broadcasts; a live vote spends r
 2. Collect a larger universe (the first run used about 1,000 posts over five days) and refit; the intervals are wide.
 3. The two work orders `schedule-set-of-votes` and `run-hive-curation-cycle`: `curation-window-seconds` is now a derived claim from the measured `reverse-auction-window-hf25` (0 s) and the literal 300 is gone from the orders' defaults and tests. Still to do per the epistemic-law handoff: make the window a required input of the operation, read by the cycle from `condenser_api.get_config`; re-run `admit.mjs` and `check-order.mjs`; re-fabricate the two services from the amended orders.
 4. Live voting: only after the Leader authorizes. The cast service (`cast-set-of-votes-service`) is untouched.
+
+## Window correction (2026-10-19)
+
+State:
+
+- `schedule-set-of-votes-service` 0.3.0 is published (PR 1 there). `request.curationWindowSeconds` is required, there is no default and no literal; a request without it throws. Breaking, so 0.3.0, not 0.2.0 (0.2.0 to 0.2.2 were already published with the literal 300).
+- `run-hive-curation-cycle-service` 0.2.0 (PR 1 there) reads `HIVE_REVERSE_AUCTION_WINDOW_SECONDS_HF25` from `condenser_api.get_config` on every node, refuses if they disagree, and passes it to schedule 0.3.0. It no longer reads `policy.curationWindowSeconds`. Its two stale tests were repaired (cast confirmation is injected; run record is version 2 with `accounting`). Check publication with `npm view @red-cup-engineering/run-hive-curation-cycle-service versions --json --prefer-online`.
+- The schedule work order here is amended (required input, version 0.3.0, a test that a request without the window is refused). It admits through `translateMarkdownJsnodeOperationPackageSpecification` and `admitArtifactFabricationSpecification` and passes its own tests and example from the registry pins.
+
+Why the service repos were not regenerated from the order fences: the service repos have moved past the orders (schedule uses `selectCurationVotes` from `hive-computing-service`, witnessed inputs, the node-operation interpreter; cycle composes witnessed reads and confirms casts on chain). Overwriting them with the order fences would have discarded that. The window change was made on the services' current code instead.
+
+Not done, and why:
+
+1. The cycle work order is not amended. The patched text (required window read from `get_config`, no policy field) is in the scratchpad `window-patch/cycle-order-required-window.md`. Checked against its pin `schedule-set-of-votes-service@0.1.0` it fails 2 of 3 tests, because 0.1.0 holds the literal 300 and the order's candidate-post shape is not the shape schedule 0.3.0 takes. So its pin and the `dep-schedule-set-of-votes-service` claim (with an `npm view` evidence file) cannot move to 0.3.0 until the order is migrated to the services' current contract.
+2. `curationWindowSeconds` stays in `data/state/hive-curation-policy-state/hive-curation-policy.json`: the cycle work order here still reads it, and the deployed cycle is still 0.1.x until the timer moves to 0.2.0. Remove it when both are done.
+
+Next steps:
+
+1. Migrate both work orders to the services' current contract (witnessed posts and price, `confirm`, run record version 2), then apply the cycle amendment, bump pins and the dependency claim to schedule 0.3.0 with evidence under `data/records/2026-10-19-work-order-evidence/`, and re-check against the published packages.
+2. Move the Cold Red Gate timer's cycle pin to 0.2.0 once published and its dry run shows the window read as 0; then delete `curationWindowSeconds` from the policy record.
