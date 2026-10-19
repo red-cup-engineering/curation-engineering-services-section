@@ -7,5 +7,11 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/red-cup-engineering/curation-services-section.git"
+  },
+  "scripts": {
+    "test": "node --test \"test/*.test.mjs\""
+  },
+  "dependencies": {
+    "@red-cup-engineering/prediction-engineering-services-section": "0.2.0"
   }
 }

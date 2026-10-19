@@ -228,7 +228,7 @@ function policy(overrides) {
     dustWeight: 100,
     preferredTags: ["proofofbrain"],
     neverVoteAuthors: [],
-    curationWindowSeconds: 300,
+    curationWindowSeconds: 0,
     curationWindowToleranceSeconds: 60,
     maxDailyBudgetPercent: 20,
     ...overrides,
@@ -243,7 +243,7 @@ test("runs observe, schedule, and cast in one composed cycle and casts the one i
   const record = await runHiveCurationCycle({
     policy: policy({ postingKeyPathTemplate: join(root, "{account}.wif"), journalRoot: root }),
     now: NOW,
-    fetchImpl: makeMockFetch({ postAgeSeconds: 300 }),
+    fetchImpl: makeMockFetch({ postAgeSeconds: 0 }),
     castVote: () => ({ vote: async () => ({ id: "a".repeat(40) }) }),
   });
 
@@ -261,7 +261,7 @@ test("refuses to cast (but still schedules) when the posting key file is absent"
   const record = await runHiveCurationCycle({
     policy: policy({ postingKeyPathTemplate: join(root, "{account}.wif"), journalRoot: root }),
     now: NOW,
-    fetchImpl: makeMockFetch({ postAgeSeconds: 300 }),
+    fetchImpl: makeMockFetch({ postAgeSeconds: 0 }),
     castVote: () => ({ vote: async () => { throw new Error("must not be called"); } }),
   });
 
@@ -276,7 +276,7 @@ test("holds a policy.heldAccounts account: no schedule/cast call, one held journ
   const record = await runHiveCurationCycle({
     policy: policy({ accounts: ["emsenn0", "michael561"], heldAccounts: ["emsenn0"], postingKeyPathTemplate: join(root, "{account}.wif"), journalRoot: root }),
     now: NOW,
-    fetchImpl: makeMockFetch({ postAgeSeconds: 300 }),
+    fetchImpl: makeMockFetch({ postAgeSeconds: 0 }),
     castVote: () => ({ vote: async () => ({ id: "a".repeat(40) }) }),
   });
 
