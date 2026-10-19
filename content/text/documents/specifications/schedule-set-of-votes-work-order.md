@@ -2,8 +2,8 @@
 ## Requirements
 - `pure-transformation`: The operation performs no I/O (no network call, no file read, no clock beyond the injectable `request.now`); every input it needs (the yield readout, the account's mana, the vote policy, the candidate posts) arrives as plain data.
 - `reads-account-mana-from-readout`: The operation reads `request.yieldReadout.accounts[request.account].votingManabar` (`maxManaRaw`, `currentManaRaw`, both raw integer strings) as the account's available voting-mana budget base; it refuses (throws `TypeError`) when `request.account` is not a key of `request.yieldReadout.accounts`.
-- `applies-vote-policy`: The operation applies `request.policy` (defaults documented in its JSDoc): `dailyManaBudgetPercent` (percent of the account's current mana spendable today), `minWeight`/`maxWeight` (Hive vote-weight bounds, out of {{max-vote-weight}}), a dust rule (`dustPendingPayoutThresholdHbd`, `dustWeight`) for short-form/low-payout content per `task:dust-curation-micro-blogging`, `preferredTags` (tags whose posts get `maxWeight` instead of `minWeight` when not dust), `neverVoteAuthors`, and a curation window (`curationWindowSeconds` default {{curation-window-seconds}} per `task:social-mev-predictive-curation`'s reverse-auction theory, `curationWindowToleranceSeconds` default {{curation-window-tolerance-seconds}}).
-- `schedules-within-window-and-budget`: For each of `request.candidatePosts` (`{tag,symbol,author,permlink,ageSeconds,pendingPayoutValueHbd,netRshares}`), the operation schedules a vote (post, weight, ISO `time`) only when the author is not excluded, `ageSeconds` falls inside the curation window (`curationWindowSeconds` +/- `curationWindowToleranceSeconds`), and the vote's estimated mana cost keeps cumulative spend at or under the daily mana budget; `time` is `request.now` plus however many seconds remain until `curationWindowSeconds` has elapsed since the post's creation (zero if already past it).
+- `applies-vote-policy`: The operation applies `request.policy` (defaults documented in its JSDoc): `dailyManaBudgetPercent` (percent of the account's current mana spendable today), `minWeight`/`maxWeight` (Hive vote-weight bounds, out of {{max-vote-weight}}), a dust rule (`dustPendingPayoutThresholdHbd`, `dustWeight`) for short-form/low-payout content per `task:dust-curation-micro-blogging`, `preferredTags` (tags whose posts get `maxWeight` instead of `minWeight` when not dust), `neverVoteAuthors`, and `curationWindowToleranceSeconds` (default {{curation-window-tolerance-seconds}}); the curation window itself is not policy but the required input `request.curationWindowSeconds`, which the caller reads from the chain's reverse auction window (claim {{curation-window-seconds}}).
+- `schedules-within-window-and-budget`: For each of `request.candidatePosts` (`{tag,symbol,author,permlink,ageSeconds,pendingPayoutValueHbd,netRshares}`), the operation schedules a vote (post, weight, ISO `time`) only when the author is not excluded, `ageSeconds` falls inside the curation window (`request.curationWindowSeconds`, required, +/- `curationWindowToleranceSeconds`), and the vote's estimated mana cost keeps cumulative spend at or under the daily mana budget; `time` is `request.now` plus however many seconds remain until `curationWindowSeconds` has elapsed since the post's creation (zero if already past it).
 - `estimates-mana-cost`: The operation estimates one vote's mana cost as `maxManaRaw * weight / 500000` — the Hive design constant that a full-weight ({{max-vote-weight}}) vote costs one {{full-votes-per-regeneration}}th of max mana, since voting mana fully regenerates over {{regeneration-seconds}} seconds at the chain's reserve rate of {{reserve-rate}} full-power votes per day. [claims: mana-cost-divisor]
 - `estimates-curation-return`: The operation reports `expectedCurationReturnHbd` per scheduled vote as an explicitly labeled order-of-magnitude estimate (the post's tag's `yieldHbdPerMillionRshares` from `request.yieldReadout.tags`, times the voter's own estimated rshares contribution scaled by `maxManaRaw` and `weight`) — never presented as the chain's exact curator-share formula.
 - `reports-refusals`: The operation reports every refused candidate with exactly one reason: `author-excluded`, `outside-window`, or `mana-below-floor`.
@@ -37,7 +37,7 @@
 - `a-pure-operation-does-no-io` | derived | world | An operation that performs no I/O has no network call, file read or clock of its own to broadcast with | none | requirement:pure-transformation | The requirement admits no I/O beyond the injectable now, and signing or broadcasting is I/O
 ## Package
 ```json
-{"packageName":"@red-cup-engineering/schedule-set-of-votes-service","packageVersion":"0.1.0","license":"UNLICENSED","dependencies":{"@red-cup-engineering/computer-ledger-system-services-section":"0.2.0","@red-cup-engineering/read-javascript-node-standard-input-text-service":"0.2.1"},"devDependencies":{}}
+{"packageName":"@red-cup-engineering/schedule-set-of-votes-service","packageVersion":"0.3.0","license":"UNLICENSED","dependencies":{"@red-cup-engineering/computer-ledger-system-services-section":"0.2.0","@red-cup-engineering/read-javascript-node-standard-input-text-service":"0.2.1"},"devDependencies":{}}
 ```
 ## Operation
 ```mjs path=scripts/schedule-set-of-votes.mjs
@@ -53,7 +53,6 @@ const DEFAULT_POLICY = Object.freeze({
   dustWeight: 100,
   preferredTags: Object.freeze([]),
   neverVoteAuthors: Object.freeze([]),
-  curationWindowSeconds: 0,
   curationWindowToleranceSeconds: 60,
 });
 const VOTE_MANA_COST_DIVISOR = 500000n;
@@ -85,6 +84,7 @@ function divideDecimalStrings(a, b, maxDecimals = 12) {
  * @param {object} request
  * @param {object} request.yieldReadout A TribeCurationYieldObservationRecord naming this account's votingManabar and each tag's yieldHbdPerMillionRshares.
  * @param {string} request.account The account to schedule votes for; must be a key of request.yieldReadout.accounts.
+ * @param {number} request.curationWindowSeconds Required. The chain's reverse auction window in seconds (HIVE_REVERSE_AUCTION_WINDOW_SECONDS_HF25), read by the caller; the operation holds no literal for it.
  * @param {readonly object[]} request.candidatePosts Posts to consider: {tag,symbol,author,permlink,ageSeconds,pendingPayoutValueHbd,netRshares}.
  * @param {object} [request.policy] Vote policy; see DEFAULT_POLICY for every field and its default.
  * @param {string} [request.now] An injectable ISO instant for generatedAt and vote time scheduling (default the real current time).
@@ -96,6 +96,8 @@ export function scheduleSetOfVotes(request) {
   const accountMana = yieldReadout?.accounts?.[account]?.votingManabar;
   if (!accountMana) throw new TypeError(`schedule-set-of-votes: request.account ${account} is not a key of request.yieldReadout.accounts`);
   const policy = { ...DEFAULT_POLICY, ...(request.policy ?? {}) };
+  const curationWindowSeconds = request.curationWindowSeconds;
+  if (!Number.isFinite(curationWindowSeconds) || curationWindowSeconds < 0) throw new TypeError("schedule-set-of-votes: request.curationWindowSeconds is required, the chain's reverse auction window in seconds");
   const nowMs = request.now ? new Date(request.now).getTime() : Date.now();
   const maxManaRaw = BigInt(accountMana.maxManaRaw);
   const currentManaRaw = BigInt(accountMana.currentManaRaw);
@@ -111,8 +113,8 @@ export function scheduleSetOfVotes(request) {
       refused.push({ post, reason: "author-excluded" });
       continue;
     }
-    const lowerBound = policy.curationWindowSeconds - policy.curationWindowToleranceSeconds;
-    const upperBound = policy.curationWindowSeconds + policy.curationWindowToleranceSeconds;
+    const lowerBound = curationWindowSeconds - policy.curationWindowToleranceSeconds;
+    const upperBound = curationWindowSeconds + policy.curationWindowToleranceSeconds;
     if (post.ageSeconds < lowerBound || post.ageSeconds > upperBound) {
       refused.push({ post, reason: "outside-window" });
       continue;
@@ -130,7 +132,7 @@ export function scheduleSetOfVotes(request) {
     const expectedCurationReturnHbd = tag?.yieldHbdPerMillionRshares != null
       ? divideDecimalStrings(multiplyDecimalStrings(tag.yieldHbdPerMillionRshares, estimatedOwnRshares.toString(), 30), "1000000", 12)
       : null;
-    const scheduledTime = new Date(nowMs + Math.max(0, policy.curationWindowSeconds - post.ageSeconds) * 1000).toISOString();
+    const scheduledTime = new Date(nowMs + Math.max(0, curationWindowSeconds - post.ageSeconds) * 1000).toISOString();
     scheduled.push({ tag: post.tag, author: post.author, permlink: post.permlink, weight, time: scheduledTime, expectedCurationReturnHbd });
   }
 
@@ -183,6 +185,7 @@ function post(overrides) {
 
 test("schedules a preferred-tag post at max weight inside the window and budget", () => {
   const record = scheduleSetOfVotes({
+    curationWindowSeconds: 0,
     yieldReadout: YIELD_READOUT,
     account: "emsenn0",
     candidatePosts: [post({})],
@@ -198,6 +201,7 @@ test("schedules a preferred-tag post at max weight inside the window and budget"
 
 test("applies the dust weight to a low-payout post regardless of tag preference", () => {
   const record = scheduleSetOfVotes({
+    curationWindowSeconds: 0,
     yieldReadout: YIELD_READOUT,
     account: "emsenn0",
     candidatePosts: [post({ pendingPayoutValueHbd: "0.001" })],
@@ -209,6 +213,7 @@ test("applies the dust weight to a low-payout post regardless of tag preference"
 
 test("refuses an excluded author", () => {
   const record = scheduleSetOfVotes({
+    curationWindowSeconds: 0,
     yieldReadout: YIELD_READOUT,
     account: "emsenn0",
     candidatePosts: [post({ author: "spammer" })],
@@ -218,8 +223,13 @@ test("refuses an excluded author", () => {
   assert.deepEqual(record.refused[0].reason, "author-excluded");
 });
 
+test("refuses a request that does not carry the chain's curation window", () => {
+  assert.throws(() => scheduleSetOfVotes({ yieldReadout: YIELD_READOUT, account: "emsenn0", candidatePosts: [post()], now: NOW }), /curationWindowSeconds is required/);
+});
+
 test("refuses a post outside the curation window", () => {
   const record = scheduleSetOfVotes({
+    curationWindowSeconds: 0,
     yieldReadout: YIELD_READOUT,
     account: "emsenn0",
     candidatePosts: [post({ ageSeconds: 3600 })],
@@ -230,6 +240,7 @@ test("refuses a post outside the curation window", () => {
 
 test("refuses once the daily mana budget is spent", () => {
   const record = scheduleSetOfVotes({
+    curationWindowSeconds: 0,
     yieldReadout: {
       tags: YIELD_READOUT.tags,
       accounts: { emsenn0: { votingManabar: { maxManaRaw: "1000000000000", currentManaRaw: "1000000000000" } } },
@@ -246,14 +257,14 @@ test("refuses once the daily mana budget is spent", () => {
 
 test("refuses when the account is not a key of yieldReadout.accounts", () => {
   assert.throws(
-    () => scheduleSetOfVotes({ yieldReadout: YIELD_READOUT, account: "unknown561", candidatePosts: [], now: NOW }),
+    () => scheduleSetOfVotes({ curationWindowSeconds: 0, yieldReadout: YIELD_READOUT, account: "unknown561", candidatePosts: [], now: NOW }),
     /request\.account unknown561 is not a key/u,
   );
 });
 ```
 ## Examples
 ```json name="schedules one preferred-tag post at max weight inside window and budget"
-{"input":{"yieldReadout":{"tags":[{"tag":"proofofbrain","yieldHbdPerMillionRshares":"0.1"}],"accounts":{"emsenn0":{"votingManabar":{"maxManaRaw":"1000000000000","currentManaRaw":"1000000000000"}}}},"account":"emsenn0","candidatePosts":[{"tag":"proofofbrain","symbol":"POB","author":"alice","permlink":"p1","ageSeconds":0,"pendingPayoutValueHbd":"0.500","netRshares":1000000}],"policy":{"preferredTags":["proofofbrain"]},"now":"2026-09-05T00:10:00.000Z"},"output":{"type":"VoteScheduleRecord","version":1,"account":"emsenn0","generatedAt":"2026-09-05T00:10:00.000Z","manaBudgetRaw":"200000000000","manaBudgetPercent":20,"scheduled":[{"tag":"proofofbrain","author":"alice","permlink":"p1","weight":10000,"time":"2026-09-05T00:10:00.000Z","expectedCurationReturnHbd":"100000"}],"refused":[]}}
+{"input":{"curationWindowSeconds":0,"yieldReadout":{"tags":[{"tag":"proofofbrain","yieldHbdPerMillionRshares":"0.1"}],"accounts":{"emsenn0":{"votingManabar":{"maxManaRaw":"1000000000000","currentManaRaw":"1000000000000"}}}},"account":"emsenn0","candidatePosts":[{"tag":"proofofbrain","symbol":"POB","author":"alice","permlink":"p1","ageSeconds":0,"pendingPayoutValueHbd":"0.500","netRshares":1000000}],"policy":{"preferredTags":["proofofbrain"]},"now":"2026-09-05T00:10:00.000Z"},"output":{"type":"VoteScheduleRecord","version":1,"account":"emsenn0","generatedAt":"2026-09-05T00:10:00.000Z","manaBudgetRaw":"200000000000","manaBudgetPercent":20,"scheduled":[{"tag":"proofofbrain","author":"alice","permlink":"p1","weight":10000,"time":"2026-09-05T00:10:00.000Z","expectedCurationReturnHbd":"100000"}],"refused":[]}}
 ```
 ## Traceability
 - `pure-transformation` -> projection `jsnode-operation-package`; acceptance `jsnode-package-assays`; constraints `node-esm-operation`
