@@ -1,0 +1,16 @@
+[submodule "schedule-set-of-votes-service"]
+	path = services/schedule-set-of-votes-service
+	url = https://github.com/red-cup-engineering/schedule-set-of-votes-service.git
+	branch = main
+[submodule "run-hive-curation-cycle-service"]
+	path = services/run-hive-curation-cycle-service
+	url = https://github.com/red-cup-engineering/run-hive-curation-cycle-service.git
+	branch = main
+[submodule "observe-tribe-curation-yield-service"]
+	path = services/observe-tribe-curation-yield-service
+	url = https://github.com/red-cup-engineering/observe-tribe-curation-yield-service.git
+	branch = main
+[submodule "cast-set-of-votes-service"]
+	path = services/cast-set-of-votes-service
+	url = https://github.com/red-cup-engineering/cast-set-of-votes-service.git
+	branch = main
