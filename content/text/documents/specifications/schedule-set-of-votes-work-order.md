@@ -31,7 +31,7 @@
 - `reverse-auction-window-hf25` | measured | parameter | From hardfork 25 the chain's reverse auction window, HIVE_REVERSE_AUCTION_WINDOW_SECONDS_HF25, is zero (it was 300 seconds at hardfork 21) | 0 s | data/records/2026-10-19-work-order-evidence/hive-get-config.json | sha256:9d2d3f0b604321d5f29dfcd84386303a13c2e78ee89d7dc01664bfcd81bcd9b8 | condenser_api.get_config returned HIVE_REVERSE_AUCTION_WINDOW_SECONDS_HF25 0 and _HF21 300 (2026-10-19)
 - `full-votes-per-regeneration` | derived | parameter | A full regeneration of voting mana spends this many full-power votes: the reserve rate per day times the days of regeneration | 50 votes | claim:reserve-rate; claim:regeneration-seconds; citation:definition of a day, 86400 seconds | 10 votes a day times 432000 / 86400 = 5 days
 - `mana-cost-divisor` | derived | parameter | A vote of weight w costs maxMana * w / (full weight * votes per regeneration) | 500000 weight-units*votes | claim:max-vote-weight; claim:full-votes-per-regeneration | 10000 times 50 = 500000
-- `curation-window-seconds` | conjectured | parameter | Votes cast within this many seconds of a post's creation earn the curation return the schedule aims for | 300 s | The curation return depends on a vote's age inside a window of about five minutes, as the reverse-auction theory the order cites holds | Curation reward share against vote age over recorded curation_reward operations | scripts of observe-tribe-curation-yield over the account history of the voting accounts | Set the window to the age beyond which the reward share stops changing; if it never changes, remove the window | The hardfork 21 window of 300 s, which the chain's own config sets to zero from hardfork 25 (claim reverse-auction-window-hf25)
+- `curation-window-seconds` | derived | parameter | The age window inside which a vote's curation reward share can differ is the chain's reverse auction window, which is zero from hardfork 25, so a vote earns the full share from the post's creation | 0 s | claim:reverse-auction-window-hf25 | The window is the chain constant HIVE_REVERSE_AUCTION_WINDOW_SECONDS_HF25, measured as 0 s on 2026-10-19; no literal stands in for it
 - `curation-window-tolerance-seconds` | conjectured | parameter | A schedule may land this many seconds either side of the window | 60 s | The scheduler's timing error is small against the window | Seconds between a scheduled vote time and the block that carries it | The vote journal of cast-set-of-votes | Set the tolerance to the 99th percentile of that lag | The order's present value, taken as the best estimate
 - `decimal-arithmetic-has-one-owner` | derived | world | Decimal-string parsing, formatting and multiplication have one owner, published at the exact version this order pins | none | constraint:primitives-exist-once; claim:dep-computer-ledger-system-services-section | The law places the primitive once in its owner, and the pinned owner is on the registry, so composing it leaves nothing to reimplement and a second implementation is outside what the law permits
 - `a-pure-operation-does-no-io` | derived | world | An operation that performs no I/O has no network call, file read or clock of its own to broadcast with | none | requirement:pure-transformation | The requirement admits no I/O beyond the injectable now, and signing or broadcasting is I/O
@@ -53,7 +53,7 @@ const DEFAULT_POLICY = Object.freeze({
   dustWeight: 100,
   preferredTags: Object.freeze([]),
   neverVoteAuthors: Object.freeze([]),
-  curationWindowSeconds: 300,
+  curationWindowSeconds: 0,
   curationWindowToleranceSeconds: 60,
 });
 const VOTE_MANA_COST_DIVISOR = 500000n;
@@ -178,7 +178,7 @@ const YIELD_READOUT = {
 };
 
 function post(overrides) {
-  return { tag: "proofofbrain", symbol: "POB", author: "alice", permlink: "p1", ageSeconds: 300, pendingPayoutValueHbd: "0.500", netRshares: 1000000, ...overrides };
+  return { tag: "proofofbrain", symbol: "POB", author: "alice", permlink: "p1", ageSeconds: 0, pendingPayoutValueHbd: "0.500", netRshares: 1000000, ...overrides };
 }
 
 test("schedules a preferred-tag post at max weight inside the window and budget", () => {
@@ -222,7 +222,7 @@ test("refuses a post outside the curation window", () => {
   const record = scheduleSetOfVotes({
     yieldReadout: YIELD_READOUT,
     account: "emsenn0",
-    candidatePosts: [post({ ageSeconds: 30 })],
+    candidatePosts: [post({ ageSeconds: 3600 })],
     now: NOW,
   });
   assert.equal(record.refused[0].reason, "outside-window");
@@ -253,7 +253,7 @@ test("refuses when the account is not a key of yieldReadout.accounts", () => {
 ```
 ## Examples
 ```json name="schedules one preferred-tag post at max weight inside window and budget"
-{"input":{"yieldReadout":{"tags":[{"tag":"proofofbrain","yieldHbdPerMillionRshares":"0.1"}],"accounts":{"emsenn0":{"votingManabar":{"maxManaRaw":"1000000000000","currentManaRaw":"1000000000000"}}}},"account":"emsenn0","candidatePosts":[{"tag":"proofofbrain","symbol":"POB","author":"alice","permlink":"p1","ageSeconds":300,"pendingPayoutValueHbd":"0.500","netRshares":1000000}],"policy":{"preferredTags":["proofofbrain"]},"now":"2026-09-05T00:10:00.000Z"},"output":{"type":"VoteScheduleRecord","version":1,"account":"emsenn0","generatedAt":"2026-09-05T00:10:00.000Z","manaBudgetRaw":"200000000000","manaBudgetPercent":20,"scheduled":[{"tag":"proofofbrain","author":"alice","permlink":"p1","weight":10000,"time":"2026-09-05T00:10:00.000Z","expectedCurationReturnHbd":"100000"}],"refused":[]}}
+{"input":{"yieldReadout":{"tags":[{"tag":"proofofbrain","yieldHbdPerMillionRshares":"0.1"}],"accounts":{"emsenn0":{"votingManabar":{"maxManaRaw":"1000000000000","currentManaRaw":"1000000000000"}}}},"account":"emsenn0","candidatePosts":[{"tag":"proofofbrain","symbol":"POB","author":"alice","permlink":"p1","ageSeconds":0,"pendingPayoutValueHbd":"0.500","netRshares":1000000}],"policy":{"preferredTags":["proofofbrain"]},"now":"2026-09-05T00:10:00.000Z"},"output":{"type":"VoteScheduleRecord","version":1,"account":"emsenn0","generatedAt":"2026-09-05T00:10:00.000Z","manaBudgetRaw":"200000000000","manaBudgetPercent":20,"scheduled":[{"tag":"proofofbrain","author":"alice","permlink":"p1","weight":10000,"time":"2026-09-05T00:10:00.000Z","expectedCurationReturnHbd":"100000"}],"refused":[]}}
 ```
 ## Traceability
 - `pure-transformation` -> projection `jsnode-operation-package`; acceptance `jsnode-package-assays`; constraints `node-esm-operation`
