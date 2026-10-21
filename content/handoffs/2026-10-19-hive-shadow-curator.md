@@ -42,3 +42,10 @@ Next steps:
 
 1. Migrate both work orders to the services' current contract (witnessed posts and price, `confirm`, run record version 2), then apply the cycle amendment, bump pins and the dependency claim to schedule 0.3.0 with evidence under `data/records/2026-10-19-work-order-evidence/`, and re-check against the published packages.
 2. Move the Cold Red Gate timer's cycle pin to 0.2.0 once published and its dry run shows the window read as 0; then delete `curationWindowSeconds` from the policy record.
+
+## Window correction closed (2026-10-21)
+
+- Both work orders (`schedule-set-of-votes-work-order.md`, `run-hive-curation-cycle-work-order.md`) now hold the services' current source verbatim in their Operation and Tests fences, pin `schedule-set-of-votes-service` 0.3.0 and `run-hive-curation-cycle-service` 0.2.0 with the dependencies those packages pin, and each dependency has an `npm view` evidence file under `data/records/2026-10-19-work-order-evidence/`. Both translate, admit (artifact specification version 2, then the JSNode package specification) and pass their own tests and example against the pinned published packages.
+- The cycle order describes the window as read from `condenser_api.get_config` on every node, refusing when they disagree; it reads no window from the policy.
+- `curationWindowSeconds` is removed from `data/state/hive-curation-policy-state/hive-curation-policy.json`; nothing reads it. `curationWindowToleranceSeconds` stays because the schedule still reads it from the policy. The record's `postingKeyPathTemplate` and `heldAccounts` are no longer read by the cycle service either; they are left for the Leader to decide.
+- Still open: moving the Cold Red Gate timer's cycle pin to 0.2.0 and its dry run (not done here; it is a deployment change outside this repository). The cycle order does not state `src/operations.mjs` or `scripts/execute-hive-curation-cycle.mjs` (open question `auxiliary-files-outside-the-fence`).
