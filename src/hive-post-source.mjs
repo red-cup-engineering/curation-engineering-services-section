@@ -18,6 +18,25 @@ export async function readRpc({ nodes, method, params, fetchImpl = fetch }) {
   throw last ?? new Error("no nodes");
 }
 
+/**
+ * Root posts created at or after `since` (epoch seconds), newest first. The API returns at most 20 per call, so the window is paged back from the newest by
+ * the last post seen; a page that ends before `since` or a repeat of the last page stops the walk.
+ */
+export async function readRootPostsSince({ nodes, since, fetchImpl = fetch, maxPages = 30 }) {
+  const out = [], seen = new Set();
+  let start = {};
+  for (let page = 0; page < maxPages; page += 1) {
+    const rows = await readRpc({ nodes, method: "condenser_api.get_discussions_by_created", params: [{ tag: "", limit: 20, ...start }], fetchImpl });
+    const fresh = rows.filter((r) => !seen.has(`${r.author}/${r.permlink}`));
+    if (fresh.length === 0) break;
+    for (const r of fresh) { seen.add(`${r.author}/${r.permlink}`); out.push(r); }
+    const last = rows.at(-1);
+    if (Date.parse(`${last.created}Z`) / 1000 < since) break;
+    start = { start_author: last.author, start_permlink: last.permlink };
+  }
+  return out.filter((r) => Date.parse(`${r.created}Z`) / 1000 >= since);
+}
+
 /** A condenser discussion or content object as a HivePostOutcomeRecord. */
 export function outcomeRecord(c) {
   let tags = []; try { tags = JSON.parse(c.json_metadata || "{}").tags ?? []; } catch {}

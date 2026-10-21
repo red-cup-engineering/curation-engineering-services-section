@@ -4,21 +4,24 @@
 //   settle    for decisions whose payout window has closed, append what the vote would have earned
 //   report    the readiness verdict over the journal
 // State: <data>/predictor.json (from fit-predictor), <data>/journal.jsonl. Nothing here reads a key or imports casting code.
-import { appendFileSync, existsSync, readFileSync, writeFileSync } from "node:fs";
+import { appendFileSync, existsSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
+import { gunzipSync } from "node:zlib";
+import { pathToFileURL } from "node:url";
 import { join } from "node:path";
 import { parseArgs } from "node:util";
 import { measureCurve, multiplierAt } from "../src/curation-curve.mjs";
-import { outcomeRecord, readRpc } from "../src/hive-post-source.mjs";
+import { outcomeRecord, readRootPostsSince, readRpc } from "../src/hive-post-source.mjs";
 import { fitRewardPredictor } from "../src/reward-predictor.mjs";
 import { assessShadowCurator, decideShadowVotes, settleShadowVote } from "../src/shadow-curator.mjs";
 
-const lines = (f) => (existsSync(f) ? readFileSync(f, "utf8").trim().split("\n").filter(Boolean).map((l) => JSON.parse(l)) : []);
+const text = (f) => (f.endsWith(".gz") ? gunzipSync(readFileSync(f)).toString("utf8") : readFileSync(f, "utf8"));
+const lines = (f) => (existsSync(f) ? text(f).trim().split("\n").filter(Boolean).map((l) => JSON.parse(l)) : []);
 const NODES = ["https://api.hive.blog", "https://api.deathwing.me", "https://api.openhive.network"];
 const seconds = (iso) => Date.parse(`${iso}Z`) / 1000;
 
 export async function run(argv, { fetchImpl = fetch, now = () => new Date() } = {}) {
   const [command, ...rest] = argv;
-  const { values } = parseArgs({ args: rest, options: { data: { type: "string" }, paid: { type: "string" }, universe: { type: "string", multiple: true }, age: { type: "string" }, slack: { type: "string" }, fraction: { type: "string" }, own: { type: "string" }, "min-payout": { type: "string", default: "0.02" }, alpha: { type: "string", default: "0.05" }, resamples: { type: "string", default: "2000" }, "payout-window": { type: "string", default: "604800" }, limit: { type: "string", default: "50" } } });
+  const { values } = parseArgs({ args: rest, options: { data: { type: "string" }, paid: { type: "string" }, universe: { type: "string", multiple: true }, age: { type: "string" }, slack: { type: "string" }, fraction: { type: "string" }, own: { type: "string" }, "min-payout": { type: "string", default: "0.02" }, alpha: { type: "string", default: "0.05" }, resamples: { type: "string", default: "2000" }, "payout-window": { type: "string", default: "604800" } } });
   const journal = join(values.data, "journal.jsonl"), predictorFile = join(values.data, "predictor.json");
   if (command === "fit-predictor") {
     const edges = [0, 43200, 86400, 108000, 129600, 172800, 259200, 345600, 432000, 604800, 800000];
@@ -35,8 +38,8 @@ export async function run(argv, { fetchImpl = fetch, now = () => new Date() } = 
   const multiplier = (a) => multiplierAt(curve, a);
   if (command === "observe") {
     const seen = new Set(lines(journal).filter((r) => r.kind === "decision").map((r) => `${r.author}/${r.permlink}`));
-    const discussions = await readRpc({ nodes: NODES, method: "condenser_api.get_discussions_by_created", params: [{ tag: "", limit: Number(values.limit) }], fetchImpl });
     const nowSeconds = now().getTime() / 1000;
+    const discussions = await readRootPostsSince({ nodes: NODES, since: nowSeconds - predictor.ageSeconds - Number(values.slack), fetchImpl });
     const candidates = discussions.map(outcomeRecord).filter((p) => { const age = nowSeconds - seconds(p.created); return age >= predictor.ageSeconds && age < predictor.ageSeconds + Number(values.slack) && !seen.has(`${p.author}/${p.permlink}`); });
     if (candidates.length === 0) return { decided: 0 };
     const rows = decideShadowVotes(candidates, predictor, { decidedAt: now().toISOString(), selectFraction });
@@ -60,6 +63,6 @@ export async function run(argv, { fetchImpl = fetch, now = () => new Date() } = 
   throw new TypeError("commands: fit-predictor, observe, settle, report");
 }
 
-if (import.meta.main) {
+if (import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) {
   try { process.stdout.write(`${JSON.stringify(await run(process.argv.slice(2)), null, 1)}\n`); } catch (error) { process.stderr.write(`${error.message}\n`); process.exitCode = 1; }
 }
