@@ -1,12 +1,12 @@
 {
-  "name": "@red-cup-engineering/curation-services-section",
+  "name": "@red-cup-engineering/curation-engineering-services-section",
   "version": "0.3.0",
   "type": "module",
   "description": "Red Cup Engineering service section for Hive-Engine tribe curation yield, vote scheduling, and vote casting.",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/red-cup-engineering/curation-services-section.git"
+    "url": "git+https://github.com/red-cup-engineering/curation-engineering-services-section.git"
   },
   "scripts": {
     "test": "node --test \"test/*.test.mjs\""
