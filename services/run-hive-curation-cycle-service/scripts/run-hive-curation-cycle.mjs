@@ -2,7 +2,7 @@
 import { observeTribeCurationYield } from "@red-cup-engineering/observe-tribe-curation-yield-service";
 import { scheduleSetOfVotes } from "@red-cup-engineering/schedule-set-of-votes-service";
 import { castSetOfVotes } from "@red-cup-engineering/cast-set-of-votes-service";
-import { put } from "@red-cup-engineering/semiotic-eavt-services-section/store";
+import { put } from "@red-cup-engineering/semiotic-eavt-engineering-services-section/store";
 import { runJavascriptNodeOperation } from "@red-cup-engineering/javascript-node-operation-service";
 
 const DEFAULT_NODES = Object.freeze(["https://api.hive.blog", "https://api.openhive.network"]);
