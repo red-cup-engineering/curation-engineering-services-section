@@ -35,7 +35,7 @@
     "@red-cup-engineering/hive-blockchain-client-service": "0.1.5",
     "@red-cup-engineering/witness-journal-document-service": "0.1.2",
     "@red-cup-engineering/hive-fleet-operations-service": "0.4.13-dev.1",
-    "@red-cup-engineering/computer-system-engine": "0.1.2",
+    "@red-cup-engineering/computer-engine": "^0.1.2",
     "@red-cup-engineering/javascript-node-operation-service": "0.1.0"
   },
   "scripts": {

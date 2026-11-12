@@ -4,7 +4,7 @@
  * config's curation block, casting through the fleet signer (which judges each vote against the
  * house's rules).
  */
-import { operation } from "@red-cup-engineering/computer-system-engine/rpc/operation";
+import { operation } from "@red-cup-engineering/computer-engine/rpc/operation";
 import { curationPolicy } from "@red-cup-engineering/hive-fleet-operations-service/strategy";
 import { runHiveCurationCycle } from "../scripts/run-hive-curation-cycle.mjs";
 
