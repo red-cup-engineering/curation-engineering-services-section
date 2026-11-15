@@ -28,7 +28,6 @@
   },
   "scripts": {
     "check": "node --check scripts/schedule-set-of-votes.mjs",
-    "test": "node --test test/*.test.mjs",
     "pack:dry-run": "npm pack --dry-run --ignore-scripts"
   },
   "engines": {

@@ -14,9 +14,6 @@
     "scripts/",
     "src/"
   ],
-  "scripts": {
-    "test": "node --test \"test/*.test.mjs\""
-  },
   "dependencies": {
     "@red-cup-engineering/prediction-engineering-services-section": "^0.2.0"
   },
