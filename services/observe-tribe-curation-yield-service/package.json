@@ -20,10 +20,10 @@
     "package.json"
   ],
   "dependencies": {
-    "@red-cup-engineering/metrologic": "0.4.0",
-    "@red-cup-engineering/hive-blockchain-client-service": "0.1.5",
-    "@red-cup-engineering/exact-number-data-service": "0.1.1",
-    "@red-cup-engineering/javascript-node-operation-service": "0.1.0"
+    "@red-cup-engineering/metrologic": "0.22.3",
+    "@red-cup-engineering/hive-blockchain-client-service": "0.1.6",
+    "@red-cup-engineering/exact-number-data-service": "0.2.3",
+    "@red-cup-engineering/javascript-node-operation-service": "0.1.1"
   },
   "scripts": {
     "check": "node --check scripts/observe-tribe-curation-yield.mjs",
