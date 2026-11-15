@@ -1,6 +1,6 @@
 {
   "name": "@red-cup-engineering/schedule-set-of-votes-service",
-  "version": "0.3.1-dev.0",
+  "version": "0.3.2-dev.0",
   "description": "Schedules a day's Hive curation votes for one account, weighting and budgeting candidate posts by policy.",
   "repository": {
     "type": "git",
