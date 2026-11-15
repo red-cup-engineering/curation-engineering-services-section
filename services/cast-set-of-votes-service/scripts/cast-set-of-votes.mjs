@@ -2,7 +2,7 @@
 import { submitToSigner } from "@red-cup-engineering/hive-fleet-operations-service/signer";
 import { put } from "@red-cup-engineering/semiotic-eavt-engineering-services-section/store";
 import { HiveClient } from "@red-cup-engineering/hive-blockchain-client-service";
-import { runJavascriptNodeOperation } from "@red-cup-engineering/javascript-node-operation-service";
+import { runJavascriptNodeOperation } from "@red-cup-engineering/node-js-function-engineering-services-section/operation";
 
 const DEFAULT_NODES = Object.freeze(["https://api.hive.blog", "https://api.openhive.network"]);
 

@@ -26,7 +26,7 @@
     "@red-cup-engineering/hive-blockchain-client-service": "^0.1.6",
     "@red-cup-engineering/witness-journal-document-service": "^0.1.4",
     "@red-cup-engineering/hive-fleet-operations-service": "^0.4.13",
-    "@red-cup-engineering/javascript-node-operation-service": "^0.1.1"
+    "@red-cup-engineering/node-js-function-engineering-services-section": "^0.5.4"
   },
   "devDependencies": {},
   "scripts": {
