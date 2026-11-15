@@ -20,13 +20,13 @@
     "package.json"
   ],
   "dependencies": {
-    "@red-cup-engineering/computer-code-engineering-services-section": "0.2.1",
+    "@red-cup-engineering/computer-code-engineering-services-section": "^0.2.1",
     "@red-cup-engineering/semiotic-eavt-engineering-services-section": "^0.6.0",
     "@red-cup-engineering/eavt-engineering-services-section": "^0.15.1",
-    "@red-cup-engineering/hive-blockchain-client-service": "0.1.6",
-    "@red-cup-engineering/witness-journal-document-service": "0.1.4",
-    "@red-cup-engineering/hive-fleet-operations-service": "0.4.13",
-    "@red-cup-engineering/javascript-node-operation-service": "0.1.1"
+    "@red-cup-engineering/hive-blockchain-client-service": "^0.1.6",
+    "@red-cup-engineering/witness-journal-document-service": "^0.1.4",
+    "@red-cup-engineering/hive-fleet-operations-service": "^0.4.13",
+    "@red-cup-engineering/javascript-node-operation-service": "^0.1.1"
   },
   "devDependencies": {},
   "scripts": {

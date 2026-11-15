@@ -20,11 +20,11 @@
     "package.json"
   ],
   "dependencies": {
-    "@red-cup-engineering/hive-computing-service": "0.0.2",
-    "@red-cup-engineering/metrologic": "0.22.3",
-    "@red-cup-engineering/computer-data-engineering-services-section": "0.7.4",
-    "@red-cup-engineering/exact-number-data-service": "0.2.3",
-    "@red-cup-engineering/javascript-node-operation-service": "0.1.1"
+    "@red-cup-engineering/hive-computing-service": "^0.0.2",
+    "@red-cup-engineering/metrologic": "^0.22.3",
+    "@red-cup-engineering/computer-data-engineering-services-section": "^0.7.4",
+    "@red-cup-engineering/exact-number-data-service": "^0.2.3",
+    "@red-cup-engineering/javascript-node-operation-service": "^0.1.1"
   },
   "scripts": {
     "check": "node --check scripts/schedule-set-of-votes.mjs",
