@@ -9,7 +9,7 @@
 - `returns-run-record-version-two`: The operation returns a `HiveCurationCycleRunRecord` of version two `{type,version,runAt,yieldReadout,accounts:{[account]:{schedule,cast}},accounting}`; its `yieldReadout` names each candidate post it read by `{tag,symbol,author,permlink,created}` only, because the bodies and vote lists stay on chain.
 - `leaves-income-to-the-ledger`: The operation books no curation income; its `accounting` field is a `HiveLedgerDerivationRequired` marker naming the accounts, because curation income is only settled and booked from chain history at `claim_reward_balance`.
 - `supports-deterministic-replay`: The operation accepts optional `request.fetchImpl`, `request.fixtures` (threaded into the observation, with `fixtures.config` standing for the `condenser_api.get_config` result), `request.sign`, `request.confirm` and `request.now`, so a fully-injected request never touches the network or a signer.
-- `runs-as-a-node-operation`: The operation is a JSNode operation run through `runJavascriptNodeOperation` from `@red-cup-engineering/javascript-node-operation-service`: it reads one JSON request per standard-input line and writes one JSON record per output line.
+- `runs-as-a-node-operation`: The operation is a JSNode operation run through `runJavascriptNodeOperation` from `@red-cup-engineering/node-js-function-engineering-services-section/operation`: it reads one JSON request per standard-input line and writes one JSON record per output line.
 ## Prohibitions
 - `no-second-observe-schedule-cast`: The operation must not reimplement any behavior of `observeTribeCurationYield`, `scheduleSetOfVotes`, or `castSetOfVotes`; it only composes them. [claims: the-three-are-composed]
 - `no-window-from-policy-or-literal`: The operation must not read the curation window from the policy, hold a literal for it, or fall back to a default when the chain's value is unavailable; the scheduled window is the chain's. [claims: reverse-auction-window-hf25, curation-window-seconds]
@@ -47,7 +47,7 @@
 - `cast-votes-only` | derived | world | The composed cast broadcasts votes only, so the cycle can call no other Hive write | none | requirement:observes-then-schedules-then-casts; claim:dep-cast-set-of-votes-service | The cast package at the pinned version casts one operation, a vote, and the cycle calls nothing else
 ## Package
 ```json
-{"packageName":"@red-cup-engineering/run-hive-curation-cycle-service","packageVersion":"0.2.0","license":"UNLICENSED","dependencies":{"@red-cup-engineering/cast-set-of-votes-service":"0.1.2","@red-cup-engineering/computer-code-engineering-services-section":"0.1.2","@red-cup-engineering/semiotic-eavt-services-section":"0.1.0","@red-cup-engineering/eavt-services-section":"0.11.0","@red-cup-engineering/observe-tribe-curation-yield-service":"0.1.2","@red-cup-engineering/schedule-set-of-votes-service":"0.3.0","@red-cup-engineering/hive-blockchain-client-service":"0.1.5","@red-cup-engineering/witness-journal-document-service":"0.1.2","@red-cup-engineering/hive-fleet-operations-service":"0.4.12","@red-cup-engineering/computer-system-engine":"0.1.2","@red-cup-engineering/javascript-node-operation-service":"0.1.0"},"devDependencies":{}}
+{"packageName":"@red-cup-engineering/run-hive-curation-cycle-service","packageVersion":"0.2.0","license":"UNLICENSED","dependencies":{"@red-cup-engineering/cast-set-of-votes-service":"0.1.2","@red-cup-engineering/computer-code-engineering-services-section":"0.1.2","@red-cup-engineering/semiotic-eavt-services-section":"0.1.0","@red-cup-engineering/eavt-services-section":"0.11.0","@red-cup-engineering/observe-tribe-curation-yield-service":"0.1.2","@red-cup-engineering/schedule-set-of-votes-service":"0.3.0","@red-cup-engineering/hive-blockchain-client-service":"0.1.5","@red-cup-engineering/witness-journal-document-service":"0.1.2","@red-cup-engineering/hive-fleet-operations-service":"0.4.12","@red-cup-engineering/computer-system-engine":"0.1.2","@red-cup-engineering/node-js-function-engineering-services-section/operation":"0.1.0"},"devDependencies":{}}
 ```
 ## Operation
 ```mjs path=scripts/run-hive-curation-cycle.mjs
@@ -57,7 +57,7 @@ import { scheduleSetOfVotes } from "@red-cup-engineering/schedule-set-of-votes-s
 import { castSetOfVotes } from "@red-cup-engineering/cast-set-of-votes-service";
 import { put } from "@red-cup-engineering/semiotic-eavt-services-section/store";
 import { curationPolicy } from "@red-cup-engineering/hive-fleet-operations-service/strategy";
-import { runJavascriptNodeOperation } from "@red-cup-engineering/javascript-node-operation-service";
+import { runJavascriptNodeOperation } from "@red-cup-engineering/node-js-function-engineering-services-section/operation";
 
 const DEFAULT_NODES = Object.freeze(["https://api.hive.blog", "https://api.openhive.network"]);
 

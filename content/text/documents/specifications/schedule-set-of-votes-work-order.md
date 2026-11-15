@@ -11,7 +11,7 @@
 - `estimates-curation-return`: The operation reports `expectedCurationReturnHbd` per scheduled vote as the selection's expected curation reward for that vote, a decimal string truncated toward zero at {{return-decimal-places}} decimal places; it is the pricing of `selectCurationVotes`, never a formula of this operation.
 - `reports-refusals`: The operation reports every refused candidate as `{tag,author,permlink,reason}` with exactly the one reason the selection gave: `author-excluded`, `already-voted`, `outside-window`, `unpriced`, `no-expected-curation-reward`, `not-admitted`, or `over-budget`; the post itself stays in the readout it was read from.
 - `exact-decimal-strings`: Every numeric quantity in the returned record is a decimal string or a plain integer, derived with `@red-cup-engineering/computer-data-engineering-services-section`'s exact-number primitives (`rationalOfBigInts`, `rationalParts`, `parseDecimalAmount`, `rationalUnits`, `formatUnits`) — never a JavaScript float carried into a reported decimal. [claims: decimal-arithmetic-has-one-owner]
-- `runs-as-a-node-operation`: The operation is a JSNode operation run through `runJavascriptNodeOperation` from `@red-cup-engineering/javascript-node-operation-service`: it reads one JSON request per standard-input line and writes one JSON record per output line, with the exported function behind the same record.
+- `runs-as-a-node-operation`: The operation is a JSNode operation run through `runJavascriptNodeOperation` from `@red-cup-engineering/node-js-function-engineering-services-section/operation`: it reads one JSON request per standard-input line and writes one JSON record per output line, with the exported function behind the same record.
 ## Prohibitions
 - `no-second-curation-selection`: The operation must not reimplement the mana cost, curation reward, trait valuation or mana allocation that `selectCurationVotes` owns; it only prepares that function's input and shapes its output. [claims: curation-selection-has-one-owner, dep-hive-computing-service]
 - `no-second-decimal-arithmetic`: The operation must not re-implement decimal-string parsing, formatting or rational arithmetic that `@red-cup-engineering/computer-data-engineering-services-section` already exports. [claims: decimal-arithmetic-has-one-owner, dep-computer-data-engineering-services-section]
@@ -43,7 +43,7 @@
 - `a-pure-operation-does-no-io` | derived | world | An operation that performs no I/O has no network call, file read or clock of its own to broadcast with | none | requirement:pure-transformation | The requirement admits no I/O beyond the injectable now, and signing or broadcasting is I/O
 ## Package
 ```json
-{"packageName":"@red-cup-engineering/schedule-set-of-votes-service","packageVersion":"0.3.0","license":"UNLICENSED","dependencies":{"@red-cup-engineering/hive-computing-service":"0.0.1","@red-cup-engineering/metrologic":"0.4.0","@red-cup-engineering/computer-data-engineering-services-section":"0.2.0","@red-cup-engineering/exact-number-data-service":"0.1.1","@red-cup-engineering/javascript-node-operation-service":"0.1.0"},"devDependencies":{}}
+{"packageName":"@red-cup-engineering/schedule-set-of-votes-service","packageVersion":"0.3.0","license":"UNLICENSED","dependencies":{"@red-cup-engineering/hive-computing-service":"0.0.1","@red-cup-engineering/metrologic":"0.4.0","@red-cup-engineering/computer-data-engineering-services-section":"0.2.0","@red-cup-engineering/exact-number-data-service":"0.1.1","@red-cup-engineering/node-js-function-engineering-services-section/operation":"0.1.0"},"devDependencies":{}}
 ```
 ## Operation
 ```mjs path=scripts/schedule-set-of-votes.mjs
@@ -52,7 +52,7 @@ import { rationalOfBigInts, rationalParts } from "@red-cup-engineering/computer-
 import { formatUnits, rationalUnits } from "@red-cup-engineering/computer-data-engineering-services-section/number/decimal-string";
 import { gradedValue, parseDecimalAmount } from "@red-cup-engineering/computer-data-engineering-services-section/number/graded";
 import { selectCurationVotes, toPostObservation } from "@red-cup-engineering/hive-computing-service/computing/curation";
-import { runJavascriptNodeOperation } from "@red-cup-engineering/javascript-node-operation-service";
+import { runJavascriptNodeOperation } from "@red-cup-engineering/node-js-function-engineering-services-section/operation";
 
 const DEFAULT_POLICY = Object.freeze({
   dailyManaBudgetPercent: 20,
