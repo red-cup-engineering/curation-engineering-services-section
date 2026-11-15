@@ -8,6 +8,12 @@
     "type": "git",
     "url": "git+https://github.com/red-cup-engineering/curation-engineering-services-section.git"
   },
+  "files": [
+    "LICENSE",
+    "README.md",
+    "scripts/",
+    "src/"
+  ],
   "scripts": {
     "test": "node --test \"test/*.test.mjs\""
   },
