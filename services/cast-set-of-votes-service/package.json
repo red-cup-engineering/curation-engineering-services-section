@@ -1,6 +1,6 @@
 {
   "name": "@red-cup-engineering/cast-set-of-votes-service",
-  "version": "0.1.2",
+  "version": "0.1.3-dev.0",
   "description": "Submits bounded Hive curation votes through the fleet signer and retains a vote as executed only after two public nodes confirm its exact chain operation.",
   "repository": {
     "type": "git",
@@ -20,13 +20,13 @@
     "package.json"
   ],
   "dependencies": {
-    "@red-cup-engineering/computer-code-engineering-services-section": "0.1.2",
+    "@red-cup-engineering/computer-code-engineering-services-section": "0.2.1",
     "@red-cup-engineering/semiotic-eavt-engineering-services-section": "^0.6.0",
     "@red-cup-engineering/eavt-engineering-services-section": "^0.15.1",
-    "@red-cup-engineering/hive-blockchain-client-service": "0.1.5",
-    "@red-cup-engineering/witness-journal-document-service": "0.1.2",
-    "@red-cup-engineering/hive-fleet-operations-service": "0.4.12",
-    "@red-cup-engineering/javascript-node-operation-service": "0.1.0"
+    "@red-cup-engineering/hive-blockchain-client-service": "0.1.6",
+    "@red-cup-engineering/witness-journal-document-service": "0.1.4",
+    "@red-cup-engineering/hive-fleet-operations-service": "0.4.13",
+    "@red-cup-engineering/javascript-node-operation-service": "0.1.1"
   },
   "devDependencies": {},
   "scripts": {
