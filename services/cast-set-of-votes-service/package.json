@@ -1,6 +1,6 @@
 {
   "name": "@red-cup-engineering/cast-set-of-votes-service",
-  "version": "0.1.3-dev.0",
+  "version": "0.1.4-dev.0",
   "description": "Submits bounded Hive curation votes through the fleet signer and retains a vote as executed only after two public nodes confirm its exact chain operation.",
   "repository": {
     "type": "git",
