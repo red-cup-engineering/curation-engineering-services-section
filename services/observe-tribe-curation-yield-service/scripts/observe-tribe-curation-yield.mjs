@@ -6,7 +6,7 @@ import {
   multiplyDecimalStrings,
   divideDecimalStrings,
   stripUnitSuffix,
-} from "@red-cup-engineering/exact-number-data-service/decimal-string";
+} from "@red-cup-engineering/exact-number-codec/decimal-string";
 import { currentVotingMana, effectiveVestingShares } from "@red-cup-engineering/hive-blockchain-client-service/rewards.mjs";
 import { HiveClient } from "@red-cup-engineering/hive-blockchain-client-service";
 import { EngineClient } from "@red-cup-engineering/hive-blockchain-client-service/engine.mjs";

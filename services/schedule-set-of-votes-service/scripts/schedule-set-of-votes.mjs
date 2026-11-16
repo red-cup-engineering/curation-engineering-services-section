@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { rationalOfBigInts, rationalParts } from "@red-cup-engineering/metrologic/number/exact-number";
-import { formatUnits, rationalUnits } from "@red-cup-engineering/exact-number-data-service/decimal-string";
-import { gradedValue, parseDecimalAmount } from "@red-cup-engineering/exact-number-data-service/graded";
+import { formatUnits, rationalUnits } from "@red-cup-engineering/exact-number-codec/decimal-string";
+import { gradedValue, parseDecimalAmount } from "@red-cup-engineering/exact-number-codec/graded";
 import { selectCurationVotes, toPostObservation } from "@red-cup-engineering/hive-computing-service/computing/curation";
 import { runJavascriptNodeOperation } from "@red-cup-engineering/node-js-function-engineering-services-section/operation";
 

@@ -1,6 +1,6 @@
 {
   "name": "@red-cup-engineering/schedule-set-of-votes-service",
-  "version": "0.3.3-dev.0",
+  "version": "0.3.3",
   "description": "Schedules a day's Hive curation votes for one account, weighting and budgeting candidate posts by policy.",
   "repository": {
     "type": "git",
@@ -23,7 +23,7 @@
     "@red-cup-engineering/hive-computing-service": "^0.0.3",
     "@red-cup-engineering/metrologic": "^0.22.3",
     "@red-cup-engineering/computer-data-engineering-services-section": "^0.7.4",
-    "@red-cup-engineering/exact-number-data-service": "^0.2.3",
+    "@red-cup-engineering/exact-number-codec": "^0.1.0",
     "@red-cup-engineering/node-js-function-engineering-services-section": "^0.5.4"
   },
   "scripts": {
