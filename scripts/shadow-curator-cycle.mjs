@@ -19,7 +19,7 @@ const lines = (f) => (existsSync(f) ? text(f).trim().split("\n").filter(Boolean)
 const NODES = ["https://api.hive.blog", "https://api.deathwing.me", "https://api.openhive.network"];
 const seconds = (iso) => Date.parse(`${iso}Z`) / 1000;
 
-export async function run(argv, { fetchImpl = fetch, now = () => new Date() } = {}) {
+export async function run(argv, { fetchImpl = fetch, now = () => new Date(), settlementLimit = Infinity, settlementOffset = 0 } = {}) {
   const [command, ...rest] = argv;
   const { values } = parseArgs({ args: rest, options: { data: { type: "string" }, paid: { type: "string" }, universe: { type: "string", multiple: true }, age: { type: "string" }, slack: { type: "string" }, fraction: { type: "string" }, own: { type: "string" }, "min-payout": { type: "string", default: "0.02" }, alpha: { type: "string", default: "0.05" }, resamples: { type: "string", default: "2000" }, "payout-window": { type: "string", default: "604800" } } });
   const journal = join(values.data, "journal.jsonl"), predictorFile = join(values.data, "predictor.json");
@@ -47,17 +47,40 @@ export async function run(argv, { fetchImpl = fetch, now = () => new Date() } = 
     return { decided: rows.length, wouldVote: rows.filter((r) => r.wouldVote).length };
   }
   if (command === "settle") {
-    const rows = lines(journal), settled = new Set(rows.filter((r) => r.kind === "settle").map((r) => `${r.author}/${r.permlink}`));
-    const due = rows.filter((r) => r.kind === "decision" && !settled.has(`${r.author}/${r.permlink}`) && now().getTime() / 1000 - seconds(r.created) > Number(values["payout-window"]) + 3600);
-    let n = 0;
-    for (const d of due) {
-      const content = await readRpc({ nodes: NODES, method: "condenser_api.get_content", params: [d.author, d.permlink], fetchImpl });
+    const rows = lines(journal);
+    const finished = new Set(rows.filter((r) => r.kind === "settle" || r.kind === "unavailable").map((r) => `${r.author}/${r.permlink}`));
+    const payoutCutoff = now().getTime() / 1000 - Number(values["payout-window"]) - 3600;
+    const due = rows.filter((r) => r.kind === "decision" && !finished.has(`${r.author}/${r.permlink}`) && seconds(r.created) < payoutCutoff);
+    let settled = 0, unavailable = 0, unpaid = 0, failed = 0, consecutiveFailures = 0, firstError;
+    for (const d of due.slice(settlementOffset, settlementOffset + settlementLimit)) {
+      let content;
+      try {
+        content = await readRpc({ nodes: NODES, method: "condenser_api.get_content", params: [d.author, d.permlink], fetchImpl });
+      } catch (error) {
+        failed += 1;
+        firstError ??= error.message;
+        // Leave a shared RPC outage for the next cycle instead of exhausting every timeout.
+        if (++consecutiveFailures >= 3) break;
+        continue;
+      }
+      consecutiveFailures = 0;
+      if (content === null) {
+        appendFileSync(journal, `${JSON.stringify({ kind: "unavailable", author: d.author, permlink: d.permlink, observedAt: now().toISOString() })}\n`);
+        unavailable += 1;
+        continue;
+      }
       const post = outcomeRecord(content);
-      if (!post.paid) continue;
+      if (!post.paid) {
+        unpaid += 1;
+        continue;
+      }
       appendFileSync(journal, `${JSON.stringify({ ...settleShadowVote(d, post, predictor, multiplier), settledAt: now().toISOString() })}\n`);
-      n += 1;
+      settled += 1;
     }
-    return { settled: n, due: due.length };
+    const attempted = settled + unavailable + unpaid + failed;
+    // Terminal rows exit the next pass's due list. Deferred rows still occupy their offsets.
+    const nextOffset = settlementOffset + attempted < due.length ? settlementOffset + unpaid + failed : null;
+    return { settled, due: due.length, unavailable, unpaid, failed, firstError, nextOffset };
   }
   if (command === "report") return assessShadowCurator(lines(journal), { alpha: Number(values.alpha), resamples: Number(values.resamples), seed: 7 });
   throw new TypeError("commands: fit-predictor, observe, settle, report");

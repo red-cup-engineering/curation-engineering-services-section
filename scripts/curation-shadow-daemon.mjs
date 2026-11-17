@@ -24,12 +24,17 @@ export async function runDaemon({ data, age = 3600, fraction = 0.5, own = 1e10, 
     const fitted = await runImpl(["fit-predictor", "--data", data, "--paid", here(`${MEASUREMENT}/paid-curve.jsonl.gz`), "--universe", here(`${MEASUREMENT}/universe.jsonl.gz`), "--age", String(age), "--fraction", String(fraction), "--own", String(own)]);
     log(`[curation-shadow] predictor fitted from ${fitted.fitted} posts\n`);
   }
-  let lastSettle = -Infinity;
+  let lastSettle = -Infinity, settlementOffset = 0;
   do {
     const started = clock();
     try { log(`[curation-shadow] observe ${JSON.stringify(await runImpl(["observe", "--data", data, "--slack", String(interval)]))}\n`); } catch (error) { log(`[curation-shadow] observe: ${error.message}\n`); }
     if (started - lastSettle >= settleEvery * 1000) {
-      try { log(`[curation-shadow] settle ${JSON.stringify(await runImpl(["settle", "--data", data]))}\n`); lastSettle = started; } catch (error) { log(`[curation-shadow] settle: ${error.message}\n`); }
+      try {
+        const result = await runImpl(["settle", "--data", data], { settlementLimit: 100, settlementOffset });
+        log(`[curation-shadow] settle ${JSON.stringify(result)}\n`);
+        settlementOffset = result.nextOffset ?? 0;
+        if (result.nextOffset == null) lastSettle = started;
+      } catch (error) { log(`[curation-shadow] settle: ${error.message}\n`); }
     }
     if (once) return;
     await new Promise((resolve) => { const t = setTimeout(resolve, Math.max(1000, interval * 1000 - (clock() - started))); signal?.addEventListener("abort", () => { clearTimeout(t); resolve(); }, { once: true }); });

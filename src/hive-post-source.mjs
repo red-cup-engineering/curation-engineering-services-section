@@ -1,20 +1,36 @@
 /**
  * Reads public Hive API data into HivePostOutcomeRecords. Read-only: it calls get methods of public nodes and nothing that carries a key.
  */
-const READ_ONLY = new Set(["condenser_api.get_discussions_by_created", "condenser_api.get_content"]);
+const GET_CONTENT = "condenser_api.get_content";
+const READ_ONLY = new Set(["condenser_api.get_discussions_by_created", GET_CONTENT]);
 const hbd = (s) => Number(String(s ?? "0").split(" ")[0]);
+
+function confirmsMissing(json, author, permlink) {
+  const post = `Post ${author}/${permlink}`;
+  const { error, result } = json;
+  return (error?.code === -31999 && typeof error.data === "string" && error.data.startsWith(`${post} was deleted `))
+    || (error?.code === -32602 && error.data?.extension?.assertion_expression === `${post} does not exist`)
+    || (result?.id === 0 && result.author === "" && result.permlink === "");
+}
 
 export async function readRpc({ nodes, method, params, fetchImpl = fetch }) {
   if (!READ_ONLY.has(method)) throw new TypeError(`hive-post-source reads only ${[...READ_ONLY].join(", ")}`);
+  const missing = new Set();
   let last;
   for (const node of nodes) {
     try {
       const response = await fetchImpl(node, { method: "POST", body: JSON.stringify({ jsonrpc: "2.0", method, params, id: 1 }), signal: AbortSignal.timeout(30000) });
+      if (response.ok === false) throw new Error(`${node}: HTTP ${response.status}`);
       const json = await response.json();
-      if (json.result !== undefined) return json.result;
+      if (method === GET_CONTENT) {
+        const [author, permlink] = params;
+        if (json.result?.author === author && json.result.permlink === permlink) return json.result;
+        if (confirmsMissing(json, author, permlink)) missing.add(node);
+      } else if (json.result !== undefined) return json.result;
       last = new Error(`${node}: ${JSON.stringify(json.error ?? json).slice(0, 120)}`);
     } catch (error) { last = error; }
   }
+  if (missing.size >= 2) return null;
   throw last ?? new Error("no nodes");
 }
 
