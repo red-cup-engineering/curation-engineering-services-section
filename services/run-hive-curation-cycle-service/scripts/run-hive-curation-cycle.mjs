@@ -46,6 +46,11 @@ export async function runHiveCurationCycle(request = {}) {
   if (!policy || typeof policy !== "object") throw new TypeError("run-hive-curation-cycle: request.policy is required");
   if (typeof policy.journalRoot !== "string" || !policy.journalRoot.startsWith("/"))
     throw new TypeError("run-hive-curation-cycle: policy.journalRoot must be the host's absolute journal directory");
+  const heldAccounts = policy.heldAccounts ?? [];
+  if (!Array.isArray(policy.accounts) || !Array.isArray(heldAccounts)) {
+    throw new TypeError("run-hive-curation-cycle: accounts and heldAccounts must be arrays");
+  }
+  const activeAccounts = policy.accounts.filter((account) => !heldAccounts.includes(account));
   const fetchImpl = request.fetchImpl ?? fetch;
   const nowIso = request.now ?? new Date().toISOString();
   const nodes = policy.nodes ?? DEFAULT_NODES;
@@ -65,7 +70,7 @@ export async function runHiveCurationCycle(request = {}) {
   const price = yieldReadout.curationPrice ?? undefined;
   const accounts = {};
   let curationWindowSeconds;
-  for (const account of policy.accounts) {
+  for (const account of activeAccounts) {
     // The window is the chain's own constant, read once per cycle.
     curationWindowSeconds ??= request.fixtures?.config ? Number(request.fixtures.config.HIVE_REVERSE_AUCTION_WINDOW_SECONDS_HF25) : await readReverseAuctionWindowSeconds(nodes, fetchImpl);
     const schedule = scheduleSetOfVotes({

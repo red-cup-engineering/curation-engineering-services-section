@@ -7,8 +7,8 @@
 [![Tips welcome](https://img.shields.io/badge/tips-welcome-d4a017)](https://github.com/561-group/.github/blob/main/TIPS.md)
 <!-- 561-group-standards:badges:end -->
 
-Runs one bounded Hive curation cycle for every policy account: two-node observation supplies the
-candidate posts and price, the selector plans votes, and each signer submission must be read back
+Runs one bounded Hive curation cycle for every policy account outside `heldAccounts`. Two-node
+observation supplies the candidate posts and price, the selector plans votes, and each signer submission must be read back
 from two nodes before it is reported as executed. Reward income is not inferred here; the Hive
 ledger derives it later from chain history at `claim_reward_balance`.
 
@@ -35,6 +35,11 @@ Promise<object>: A HiveCurationCycleRunRecord: {type,version,runAt,yieldReadout,
 ## Command
 
 run-hive-curation-cycle reads one JSON value per input line and writes one JSON value per output line.
+
+An installed `hive-curation-cycle` operation can name its account policy through
+`operationSources[].configuration.accountPolicyPath`. The absolute path points to a
+`HiveCurationPolicyRecord` with `accounts` and `heldAccounts`. The host continues to
+provide `journalRoot` in the schedule input.
 
 ## Examples
 
