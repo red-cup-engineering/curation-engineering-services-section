@@ -3,6 +3,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
+import { runDaemon } from "../scripts/curation-shadow-daemon.mjs";
 import { run } from "../scripts/shadow-curator-cycle.mjs";
 import { readRpc } from "../src/hive-post-source.mjs";
 
@@ -14,6 +15,19 @@ const deleted = (author, permlink) => ({
 });
 const paid = (author, permlink) => ({
   result: { author, permlink, created, last_payout: "2026-11-05T00:00:00", allow_curation_rewards: false },
+});
+
+test("the daemon keeps its observation step before a configured settlement batch", async (t) => {
+  const data = mkdtempSync(join(tmpdir(), "hive-shadow-daemon-"));
+  t.after(() => rmSync(data, { recursive: true, force: true }));
+  writeFileSync(join(data, "predictor.json"), "{}");
+  const calls = [];
+  const runImpl = async ([command], options) => {
+    calls.push([command, options]);
+    return {};
+  };
+  await runDaemon({ data, log: () => {}, once: true, settlementLimit: 300, runImpl });
+  assert.deepEqual(calls, [["observe", undefined], ["settle", { settlementLimit: 300, settlementOffset: 0 }]]);
 });
 
 test("settlement records confirmed deletions, defers RPC errors and reaches later decisions", async (t) => {
