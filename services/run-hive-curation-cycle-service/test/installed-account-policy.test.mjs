@@ -27,16 +27,25 @@ test("the installed schedule applies its configured account policy before callin
     hooks.deregister();
   }
   const [operation] = hiveCurationOperations(undefined, { configuration: { accountPolicyPath } });
-  await assert.rejects(Promise.resolve().then(() => operation.execute({ journalRoot: root }, [], {})), /ENOENT/);
+  const execute = (input = { journalRoot: root }) => Promise.resolve().then(() => operation.execute(input, [], {}));
+  await assert.rejects(execute(), /ENOENT/);
+  writeFileSync(accountPolicyPath, JSON.stringify({ type: "HiveCurationPolicyRecord", accounts: ["michael561"] }));
+  await assert.rejects(execute(), /requires the installed account allowlist and holds/);
   writeFileSync(accountPolicyPath, JSON.stringify({
     type: "HiveCurationPolicyRecord",
-    accounts: ["michael561"],
+    accounts: ["michael561", "outside-the-fleet"],
     heldAccounts: ["emsenn0"],
   }));
-  const input = await operation.execute({ journalRoot: root }, [], {});
+  const input = await execute({ journalRoot: root, policy: { accounts: ["emsenn0"], heldAccounts: [] } });
   assert.deepEqual(input.accounts, ["michael561"]);
   assert.deepEqual(input.heldAccounts, ["emsenn0"]);
   assert.equal(input.journalRoot, root);
   assert.equal(input.maxDailyBudgetPercent, 20);
   assert.equal(input.maxWeight, 3000);
+  writeFileSync(accountPolicyPath, JSON.stringify({
+    type: "HiveCurationPolicyRecord",
+    accounts: ["michael561"],
+    heldAccounts: ["emsenn0", "michael561"],
+  }));
+  assert.deepEqual((await execute()).heldAccounts, ["emsenn0", "michael561"]);
 });

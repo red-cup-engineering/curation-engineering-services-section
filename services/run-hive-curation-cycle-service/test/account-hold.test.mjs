@@ -29,7 +29,7 @@ test("held accounts are excluded from both observation and the casting cycle", a
     active_votes: ["v1", "v2", "v3", "v4", "v5"].map((voter) => ({ voter, rshares: "1000000" })),
   };
   const submitted = [];
-  const result = await runHiveCurationCycle({
+  const request = {
     policy: {
       journalRoot: root,
       accounts: ["emsenn0", "michael561"],
@@ -60,10 +60,19 @@ test("held accounts are excluded from both observation and the casting cycle", a
       return { status: "broadcast", id: "a".repeat(40) };
     },
     confirm: async () => nodes.map((node) => ({ node })),
-  });
+  };
+  const result = await runHiveCurationCycle(request);
   assert.deepEqual(Object.keys(result.yieldReadout.accounts), ["michael561"]);
   assert.deepEqual(Object.keys(result.accounts), ["michael561"]);
   assert.deepEqual(submitted, ["michael561"], JSON.stringify(result.accounts.michael561.schedule));
   assert.equal(result.accounts.michael561.schedule.manaBudgetPercent, 20);
   assert.equal(result.accounts.michael561.cast.cast.length, 1);
+
+  const allHeld = await runHiveCurationCycle({
+    ...request,
+    policy: { ...request.policy, heldAccounts: request.policy.accounts },
+  });
+  assert.deepEqual(allHeld.yieldReadout.accounts, {});
+  assert.deepEqual(allHeld.accounts, {});
+  assert.deepEqual(submitted, ["michael561"]);
 });
