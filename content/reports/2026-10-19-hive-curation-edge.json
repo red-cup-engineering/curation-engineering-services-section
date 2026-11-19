@@ -1,0 +1,338 @@
+{
+ "type": "HiveCurationEdgeMeasurement",
+ "measuredAt": "2026-10-19",
+ "curve": {
+  "edges": [
+   0,
+   43200,
+   86400,
+   108000,
+   129600,
+   172800,
+   259200,
+   345600,
+   432000,
+   604800,
+   800000
+  ],
+  "bins": [
+   {
+    "from": 0,
+    "to": 43200,
+    "votes": 6236,
+    "posts": 74,
+    "median": 1.0039629344332832,
+    "lower": 1.0014956965347146,
+    "upper": 1.0077930795238823
+   },
+   {
+    "from": 43200,
+    "to": 86400,
+    "votes": 2116,
+    "posts": 52,
+    "median": 1,
+    "lower": 0.9949946795309756,
+    "upper": 1.0054818069037947
+   },
+   {
+    "from": 86400,
+    "to": 108000,
+    "votes": 163,
+    "posts": 26,
+    "median": 0.8123721662201557,
+    "lower": 0.5003994441642857,
+    "upper": 0.9355392635795265
+   },
+   {
+    "from": 108000,
+    "to": 129600,
+    "votes": 29,
+    "posts": 13,
+    "median": 0.5349249489491459,
+    "lower": 0.464513170181966,
+    "upper": 0.9636697116673512
+   },
+   {
+    "from": 129600,
+    "to": 172800,
+    "votes": 60,
+    "posts": 14,
+    "median": 0.5162779379566025,
+    "lower": 0.49507114148444625,
+    "upper": 0.528511159509114
+   },
+   {
+    "from": 172800,
+    "to": 259200,
+    "votes": 31,
+    "posts": 22,
+    "median": 0.5200660809981215,
+    "lower": 0.5095919296425979,
+    "upper": 0.5386919803193647
+   },
+   {
+    "from": 259200,
+    "to": 345600,
+    "votes": 32,
+    "posts": 8,
+    "median": 0.1211499542742174,
+    "lower": 0.109724198613097,
+    "upper": 0.9758176354532477
+   },
+   {
+    "from": 345600,
+    "to": 432000,
+    "votes": 4,
+    "posts": 4,
+    "median": 0.13017825386833526,
+    "lower": 0.07651034979582018,
+    "upper": 0.13074635471307317
+   },
+   {
+    "from": 432000,
+    "to": 604800,
+    "votes": 47,
+    "posts": 8,
+    "median": 0.13225065410580145,
+    "lower": 0.12684154785145385,
+    "upper": 0.13498425197119487
+   },
+   {
+    "from": 604800,
+    "to": 800000,
+    "votes": 0,
+    "posts": 0,
+    "median": null,
+    "lower": null,
+    "upper": null
+   }
+  ]
+ },
+ "universe": {
+  "posts": 953,
+  "from": "2026-10-06T08:04:48",
+  "to": "2026-10-11T08:25:42",
+  "paid": 953,
+  "curatorsPaid": 676,
+  "declinedOrNoCuration": 13
+ },
+ "alpha": 0.05,
+ "resamples": 2000,
+ "results": [
+  {
+   "ageSeconds": 300,
+   "selectFraction": 0.25,
+   "heldOutPosts": 712,
+   "selected": 180,
+   "baselineUnitReward": 2.5553297182044104e-14,
+   "selectedUnitReward": 3.475847286959617e-14,
+   "edge": 9.206526252600352e-15,
+   "edgeInterval": {
+    "lower": 8.41294139352039e-15,
+    "upper": 9.785351575630805e-15,
+    "oneSidedLower": 8.587461721769144e-15,
+    "oneSidedUpper": 9.700366427327653e-15
+   },
+   "relativeEdge": 0.36023436122444497,
+   "ordinaryBase": 0.7247191011235955,
+   "brier": 0.0823864331486906,
+   "brierConstant": 0.19950132559020217,
+   "readiness": {
+    "pass": true,
+    "checks": {
+     "evidence": {
+      "pass": true,
+      "value": 180,
+      "need": ">= 12 independent clusters"
+     },
+     "profit": {
+      "pass": true,
+      "value": 0.23486448258953224,
+      "need": "lower bound of net return per unit above zero"
+     }
+    }
+   }
+  },
+  {
+   "ageSeconds": 300,
+   "selectFraction": 0.5,
+   "heldOutPosts": 712,
+   "selected": 357,
+   "baselineUnitReward": 2.5553297182044104e-14,
+   "selectedUnitReward": 3.415119158162658e-14,
+   "edge": 8.598759407915164e-15,
+   "edgeInterval": {
+    "lower": 7.890359081108927e-15,
+    "upper": 9.183013741477541e-15,
+    "oneSidedLower": 8.022371215755527e-15,
+    "oneSidedUpper": 9.107406968529715e-15
+   },
+   "relativeEdge": 0.3364690802259398,
+   "ordinaryBase": 0.7247191011235955,
+   "brier": 0.0823864331486906,
+   "brierConstant": 0.19950132559020217,
+   "readiness": {
+    "pass": true,
+    "checks": {
+     "evidence": {
+      "pass": true,
+      "value": 357,
+      "need": ">= 13 independent clusters"
+     },
+     "profit": {
+      "pass": true,
+      "value": 0.21947327012594578,
+      "need": "lower bound of net return per unit above zero"
+     }
+    }
+   }
+  },
+  {
+   "ageSeconds": 3600,
+   "selectFraction": 0.25,
+   "heldOutPosts": 712,
+   "selected": 180,
+   "baselineUnitReward": 2.555329718204411e-14,
+   "selectedUnitReward": 3.517548405725925e-14,
+   "edge": 9.623537440263459e-15,
+   "edgeInterval": {
+    "lower": 9.178969650418575e-15,
+    "upper": 9.912221735170123e-15,
+    "oneSidedLower": 9.262620084332776e-15,
+    "oneSidedUpper": 9.890273652010342e-15
+   },
+   "relativeEdge": 0.3765536324594734,
+   "ordinaryBase": 0.7247191011235955,
+   "brier": 0.07015499259907171,
+   "brierConstant": 0.19950132559020217,
+   "readiness": {
+    "pass": true,
+    "checks": {
+     "evidence": {
+      "pass": true,
+      "value": 180,
+      "need": ">= 12 independent clusters"
+     },
+     "profit": {
+      "pass": true,
+      "value": 0.2532766207894864,
+      "need": "lower bound of net return per unit above zero"
+     }
+    }
+   }
+  },
+  {
+   "ageSeconds": 3600,
+   "selectFraction": 0.5,
+   "heldOutPosts": 712,
+   "selected": 357,
+   "baselineUnitReward": 2.555329718204411e-14,
+   "selectedUnitReward": 3.463693916613233e-14,
+   "edge": 9.084506992420909e-15,
+   "edgeInterval": {
+    "lower": 8.535713389734991e-15,
+    "upper": 9.54843296707173e-15,
+    "oneSidedLower": 8.637297585237597e-15,
+    "oneSidedUpper": 9.491500827954744e-15
+   },
+   "relativeEdge": 0.3554782742663496,
+   "ordinaryBase": 0.7247191011235955,
+   "brier": 0.07015499259907171,
+   "brierConstant": 0.19950132559020217,
+   "readiness": {
+    "pass": true,
+    "checks": {
+     "evidence": {
+      "pass": true,
+      "value": 357,
+      "need": ">= 13 independent clusters"
+     },
+     "profit": {
+      "pass": true,
+      "value": 0.23619506897213452,
+      "need": "lower bound of net return per unit above zero"
+     }
+    }
+   }
+  },
+  {
+   "ageSeconds": 21600,
+   "selectFraction": 0.25,
+   "heldOutPosts": 712,
+   "selected": 180,
+   "baselineUnitReward": 2.5553297182044104e-14,
+   "selectedUnitReward": 3.5171821387466064e-14,
+   "edge": 9.619874770470274e-15,
+   "edgeInterval": {
+    "lower": 9.143132997229603e-15,
+    "upper": 9.916080718409898e-15,
+    "oneSidedLower": 9.239992561206063e-15,
+    "oneSidedUpper": 9.886838197859524e-15
+   },
+   "relativeEdge": 0.37641029793136616,
+   "ordinaryBase": 0.7247191011235955,
+   "brier": 0.058577380170762514,
+   "brierConstant": 0.19950132559020217,
+   "readiness": {
+    "pass": true,
+    "checks": {
+     "evidence": {
+      "pass": true,
+      "value": 180,
+      "need": ">= 12 independent clusters"
+     },
+     "profit": {
+      "pass": true,
+      "value": 0.2530196602830915,
+      "need": "lower bound of net return per unit above zero"
+     }
+    }
+   }
+  },
+  {
+   "ageSeconds": 21600,
+   "selectFraction": 0.5,
+   "heldOutPosts": 712,
+   "selected": 357,
+   "baselineUnitReward": 2.5553297182044104e-14,
+   "selectedUnitReward": 3.4657058440075434e-14,
+   "edge": 9.104626266364016e-15,
+   "edgeInterval": {
+    "lower": 8.555221573187371e-15,
+    "upper": 9.561424443352058e-15,
+    "oneSidedLower": 8.659384518968626e-15,
+    "oneSidedUpper": 9.51444693053654e-15
+   },
+   "relativeEdge": 0.356265619781873,
+   "ordinaryBase": 0.7247191011235955,
+   "brier": 0.058577380170762514,
+   "brierConstant": 0.19950132559020217,
+   "readiness": {
+    "pass": true,
+    "checks": {
+     "evidence": {
+      "pass": true,
+      "value": 357,
+      "need": ">= 13 independent clusters"
+     },
+     "profit": {
+      "pass": true,
+      "value": 0.23676967509728594,
+      "need": "lower bound of net return per unit above zero"
+     }
+    }
+   }
+  }
+ ],
+ "counterfactual": {
+  "ownRshares": 10000000000,
+  "fallbackRate": 3.5465970246368656e-14,
+  "fallbackTotalRate": 7.103910417396006e-14,
+  "minPayoutHbd": 0.02
+ },
+ "curatorRate": {
+  "median": 3.5465970246368656e-14,
+  "p10": 3.381357559998055e-14,
+  "p90": 3.694287819417105e-14
+ }
+}

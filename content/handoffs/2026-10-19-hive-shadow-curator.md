@@ -1,0 +1,51 @@
+# Handoff, 2026-10-19: Hive shadow curator
+
+For a fresh agent. Nothing here votes, signs or broadcasts; a live vote spends real voting power and needs the Leader's authorization after readiness passes.
+
+## What was measured (public Hive API, 2026-10-19)
+
+- `HIVE_REVERSE_AUCTION_WINDOW_SECONDS_HF25` is 0. The reward curve, measured from 96 paid posts' `curation_reward` operations (about 8,700 rewarded upvotes), is flat for the first 24 hours (median multiplier 1.00), about 0.81 for the next five hours, about 0.52 from 30 hours to 3 days, about 0.13 from 3 to 7 days. See `content/reports/2026-10-19-hive-curation-edge.json` (`curve`, with bootstrap intervals).
+- Rewards are linear in net rshares and shared pro rata among positive rshares. The curators' pool per net rshare is nearly constant across posts (p10 to p90 within 5 percent). So a vote earns about the same per rshare on any post that pays; post choice matters only through the chance the post pays curators at all.
+- The chain pays a post only if its total payout reaches `HIVE_MIN_PAYOUT_HBD` (0.020 HBD, from `condenser_api.get_config`). Measured on 953 root posts sampled 2026-10-06 to 2026-10-11 with final outcomes (paid or not): with the median total payout per net rshare (7.1e-14 HBD, p10 to p90 6.8e-14 to 7.4e-14), "net rshares times that rate is at least 0.02" separates the posts that paid from those that did not for 675 of 676 paying and 136 of 136 non-paying posts with positive net rshares. About 29 percent of posts paid curators nothing: 13 had rewards declined, 55 net non-positive, 73 no votes, 136 positive but under the minimum. Our own vote is small (emsenn0 holds about 1.04e6 effective VESTS, so a full vote is about 2e10 rshares, worth about 0.0015 HBD in total), so it rescues no sub-minimum post alone.
+- Edge: a ridge logistic predictor of "this vote earns an ordinary reward" from the post's state at time t (votes, rshares up and down, flags), fitted walk-forward over four folds, scored on 712 held-out posts. Voting only the top half by prediction instead of every candidate earns 34 to 36 percent more reward per unit rshare (95 percent interval about 31 to 37 percent) at 5 minutes, 1 hour and 6 hours; the top quarter 36 to 38 percent. Brier score of the prediction 0.058 to 0.082 against 0.199 for the base rate. Readiness (`assessClusteredEdge`) passes on the backtest in all twelve cells. This is a backtest; it authorizes nothing. The size of the prize is small: baseline reward is about 2.6e-14 HBD per rshare, so about 5e-4 HBD per full vote of emsenn0 before the edge.
+- Baseline is a uniform vote on every candidate. That is what the existing scheduler does inside its age window when no tag is preferred, because its dust rule (pending payout under 0.02) and its minimum weight are both 100 and a post a few minutes old is almost always dust by that rule; the scheduler's tag-yield estimate (`observe-tribe-curation-yield`) was not compared (it measures Hive-Engine tribe yield, a different quantity).
+
+## Built
+
+- `src/curation-curve.mjs`, `src/post-outcome.mjs`, `src/reward-predictor.mjs`, `src/shadow-curator.mjs`, `src/hive-post-source.mjs` (read-only: only `condenser_api.get_*`).
+- `scripts/shadow-curator-cycle.mjs`: `fit-predictor`, `observe`, `settle`, `report`. Journal `<data>/journal.jsonl` holds decision rows and settle rows. Readiness is `assessShadowCurator` over the section `@red-cup-engineering/prediction-engineering-services-section`.
+- `scripts/measure-curation-edge.mjs`, `scripts/collect-hive-post-universe.mjs`, `scripts/collect-hive-paid-curation.mjs`; data under `data/records/2026-10-19-hive-curation-measurement/`.
+
+## Next steps
+
+1. Run the cycle on Cold Red Gate: `fit-predictor` with the stored data (age 3600 s, fraction 0.5), then `observe` every 10 minutes (`--slack 600`) and `settle` daily. Needs a pulse in the Kalshi-style area, not a systemd timer. Report readiness after at least seven days of settled rows; backtest readiness does not authorize anything.
+2. Collect a larger universe (the first run used about 1,000 posts over five days) and refit; the intervals are wide.
+3. The two work orders `schedule-set-of-votes` and `run-hive-curation-cycle`: `curation-window-seconds` is now a derived claim from the measured `reverse-auction-window-hf25` (0 s) and the literal 300 is gone from the orders' defaults and tests. Still to do per the epistemic-law handoff: make the window a required input of the operation, read by the cycle from `condenser_api.get_config`; re-run `admit.mjs` and `check-order.mjs`; re-fabricate the two services from the amended orders.
+4. Live voting: only after the Leader authorizes. The cast service (`cast-set-of-votes-service`) is untouched.
+
+## Window correction (2026-10-19)
+
+State:
+
+- `schedule-set-of-votes-service` 0.3.0 is published (PR 1 there). `request.curationWindowSeconds` is required, there is no default and no literal; a request without it throws. Breaking, so 0.3.0, not 0.2.0 (0.2.0 to 0.2.2 were already published with the literal 300).
+- `run-hive-curation-cycle-service` 0.2.0 (PR 1 there) reads `HIVE_REVERSE_AUCTION_WINDOW_SECONDS_HF25` from `condenser_api.get_config` on every node, refuses if they disagree, and passes it to schedule 0.3.0. It no longer reads `policy.curationWindowSeconds`. Its two stale tests were repaired (cast confirmation is injected; run record is version 2 with `accounting`). Check publication with `npm view @red-cup-engineering/run-hive-curation-cycle-service versions --json --prefer-online`.
+- The schedule work order here is amended (required input, version 0.3.0, a test that a request without the window is refused). It admits through `translateMarkdownJsnodeOperationPackageSpecification` and `admitArtifactFabricationSpecification` and passes its own tests and example from the registry pins.
+
+Why the service repos were not regenerated from the order fences: the service repos have moved past the orders (schedule uses `selectCurationVotes` from `hive-computing-service`, witnessed inputs, the node-operation interpreter; cycle composes witnessed reads and confirms casts on chain). Overwriting them with the order fences would have discarded that. The window change was made on the services' current code instead.
+
+Not done, and why:
+
+1. The cycle work order is not amended. The patched text (required window read from `get_config`, no policy field) is in the scratchpad `window-patch/cycle-order-required-window.md`. Checked against its pin `schedule-set-of-votes-service@0.1.0` it fails 2 of 3 tests, because 0.1.0 holds the literal 300 and the order's candidate-post shape is not the shape schedule 0.3.0 takes. So its pin and the `dep-schedule-set-of-votes-service` claim (with an `npm view` evidence file) cannot move to 0.3.0 until the order is migrated to the services' current contract.
+2. `curationWindowSeconds` stays in `data/state/hive-curation-policy-state/hive-curation-policy.json`: the cycle work order here still reads it, and the deployed cycle is still 0.1.x until the timer moves to 0.2.0. Remove it when both are done.
+
+Next steps:
+
+1. Migrate both work orders to the services' current contract (witnessed posts and price, `confirm`, run record version 2), then apply the cycle amendment, bump pins and the dependency claim to schedule 0.3.0 with evidence under `data/records/2026-10-19-work-order-evidence/`, and re-check against the published packages.
+2. Move the Cold Red Gate timer's cycle pin to 0.2.0 once published and its dry run shows the window read as 0; then delete `curationWindowSeconds` from the policy record.
+
+## Window correction closed (2026-10-21)
+
+- Both work orders (`schedule-set-of-votes-work-order.md`, `run-hive-curation-cycle-work-order.md`) now hold the services' current source verbatim in their Operation and Tests fences, pin `schedule-set-of-votes-service` 0.3.0 and `run-hive-curation-cycle-service` 0.2.0 with the dependencies those packages pin, and each dependency has an `npm view` evidence file under `data/records/2026-10-19-work-order-evidence/`. Both translate, admit (artifact specification version 2, then the JSNode package specification) and pass their own tests and example against the pinned published packages.
+- The cycle order describes the window as read from `condenser_api.get_config` on every node, refusing when they disagree; it reads no window from the policy.
+- `curationWindowSeconds` is removed from `data/state/hive-curation-policy-state/hive-curation-policy.json`; nothing reads it. `curationWindowToleranceSeconds` stays because the schedule still reads it from the policy. The record's `postingKeyPathTemplate` and `heldAccounts` are no longer read by the cycle service either; they are left for the Leader to decide.
+- Still open: moving the Cold Red Gate timer's cycle pin to 0.2.0 and its dry run (not done here; it is a deployment change outside this repository). The cycle order does not state `src/operations.mjs` or `scripts/execute-hive-curation-cycle.mjs` (open question `auxiliary-files-outside-the-fence`).

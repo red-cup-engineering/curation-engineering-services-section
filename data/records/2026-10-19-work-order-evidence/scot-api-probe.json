@@ -1,0 +1,33 @@
+{
+  "run": "GET https://scot-api.hive-engine.com<route>, 2026-10-19",
+  "probes": [
+    {
+      "route": "/leo",
+      "status": 404
+    },
+    {
+      "route": "/LEO",
+      "status": 404
+    },
+    {
+      "route": "/leo/pool",
+      "status": 404
+    },
+    {
+      "route": "/pools/leo",
+      "status": 404
+    },
+    {
+      "route": "/leo/config",
+      "status": 404
+    },
+    {
+      "route": "/api/leo",
+      "status": 404
+    },
+    {
+      "route": "/tribes/leo",
+      "status": 404
+    }
+  ]
+}
