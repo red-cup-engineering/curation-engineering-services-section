@@ -26,7 +26,7 @@ const DEFAULT_NODES = Object.freeze(["https://api.hive.blog", "https://api.openh
  * @throws {TypeError} When request.account does not equal request.schedule.account.
  */
 export async function castSetOfVotes(request) {
-  const { schedule, account, journalRoot } = request;
+  const { schedule, account, journalRoot: logRoot } = request;
   if (account !== schedule.account) throw new TypeError(`cast-set-of-votes: request.account ${account} does not match request.schedule.account ${schedule.account}`);
   const maxDailyBudgetPercent = request.maxDailyBudgetPercent ?? 20;
   const castAt = request.now ? new Date(request.now).toISOString() : new Date().toISOString();
@@ -55,7 +55,7 @@ export async function castSetOfVotes(request) {
 
   const cast = [];
   const unconfirmed = [];
-  const refused = [];
+  const rejected = [];
   for (const entry of schedule.scheduled) {
     const operation = ["vote", { voter: account, author: entry.author, permlink: entry.permlink, weight: entry.weight }];
     let result;
@@ -64,20 +64,20 @@ export async function castSetOfVotes(request) {
         operation });
     } catch (error) {
       if (!error?.refusal) throw error;
-      const refusal = { author: entry.author, permlink: entry.permlink, weight: entry.weight, reason: error.refusal.datum, detail: error.refusal.reason };
-      refused.push(refusal);
+      const rejection = { author: entry.author, permlink: entry.permlink, weight: entry.weight, reason: error.refusal.datum, detail: error.refusal.reason };
+      rejected.push(rejection);
       try {
-        put(journalRoot, "hive-curation-vote-cast", {
+        put(logRoot, "hive-curation-vote-cast", {
           category: "vote-refused", account,
-          author: refusal.author, permlink: refusal.permlink, weight: refusal.weight,
-          reason: String(refusal.reason ?? "signer-refused").slice(0, 128),
-          detail: String(refusal.detail ?? "").slice(0, 1024),
+          author: rejection.author, permlink: rejection.permlink, weight: rejection.weight,
+          reason: String(rejection.reason ?? "signer-refused").slice(0, 128),
+          detail: String(rejection.detail ?? "").slice(0, 1024),
           at: new Date().toISOString(),
         });
-      } catch (journalError) {
+      } catch (logError) {
         // A custody failure must not replace the signer's original disposition.
-        throw Object.assign(new Error("cast-set-of-votes: could not journal signer refusal", { cause: journalError }), {
-          refusal: error.refusal, refused: [...refused],
+        throw Object.assign(new Error("cast-set-of-votes: could not journal signer refusal", { cause: logError }), {
+          refusal: error.refusal, refused: [...rejected],
         });
       }
       continue;
@@ -95,11 +95,11 @@ export async function castSetOfVotes(request) {
         detail: error instanceof Error ? error.message : String(error),
       };
       unconfirmed.push(submission);
-      put(journalRoot, "hive-curation-vote-cast", { category: "vote-submitted-unconfirmed", ...submission, tag: entry.tag, expectedCurationReturnHbd: entry.expectedCurationReturnHbd, at: new Date().toISOString(), told: { for: false, against: true } });
+      put(logRoot, "hive-curation-vote-cast", { category: "vote-submitted-unconfirmed", ...submission, tag: entry.tag, expectedCurationReturnHbd: entry.expectedCurationReturnHbd, at: new Date().toISOString(), told: { for: false, against: true } });
       continue;
     }
     cast.push({ author: entry.author, permlink: entry.permlink, weight: entry.weight, transactionId: result.id, witnesses });
-    put(journalRoot, "hive-curation-vote-cast", { category: "vote-chain-confirmed", ...{
+    put(logRoot, "hive-curation-vote-cast", { category: "vote-chain-confirmed", ...{
         account,
         author: entry.author,
         permlink: entry.permlink,
@@ -111,7 +111,7 @@ export async function castSetOfVotes(request) {
       }, at: new Date().toISOString() });
   }
 
-  return { type: "CastSetOfVotesRecord", version: 2, account, castAt, cast, unconfirmed, refused, refusal: null };
+  return { type: "CastSetOfVotesRecord", version: 2, account, castAt, cast, unconfirmed, refused: rejected, refusal: null };
 }
 
 if (import.meta.main) {
