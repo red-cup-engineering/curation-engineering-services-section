@@ -55,7 +55,7 @@ export async function runHiveCurationCycle(request = {}) {
   const nowIso = request.now ?? new Date().toISOString();
   const nodes = policy.nodes ?? DEFAULT_NODES;
 
-  const yieldReport = await observeTribeCurationYield({
+  const yieldReadout = await observeTribeCurationYield({
     nodes,
     hiveEngineNode: policy.hiveEngineNode,
     tags: policy.tags,
@@ -66,8 +66,8 @@ export async function runHiveCurationCycle(request = {}) {
     fixtures: request.fixtures,
   });
 
-  const candidatePosts = yieldReport.candidatePosts;
-  const price = yieldReport.curationPrice ?? undefined;
+  const candidatePosts = yieldReadout.candidatePosts;
+  const price = yieldReadout.curationPrice ?? undefined;
   const accounts = {};
   let curationWindowSeconds;
   for (const account of activeAccounts) {
@@ -75,7 +75,7 @@ export async function runHiveCurationCycle(request = {}) {
     curationWindowSeconds ??= request.fixtures?.config ? Number(request.fixtures.config.HIVE_REVERSE_AUCTION_WINDOW_SECONDS_HF25) : await readReverseAuctionWindowSeconds(nodes, fetchImpl);
     const schedule = scheduleSetOfVotes({
       curationWindowSeconds,
-      yieldReadout: yieldReport,
+      yieldReadout,
       account,
       candidatePosts,
       price,
@@ -117,7 +117,7 @@ export async function runHiveCurationCycle(request = {}) {
     version: 2,
     runAt: nowIso,
     // The cycle record names the posts it read; their bodies and vote lists stay on chain.
-    yieldReadout: { ...yieldReport, candidatePosts: candidatePosts.map(({ tag, symbol, post }) => ({ tag, symbol, author: post.author, permlink: post.permlink, created: post.created })) },
+    yieldReadout: { ...yieldReadout, candidatePosts: candidatePosts.map(({ tag, symbol, post }) => ({ tag, symbol, author: post.author, permlink: post.permlink, created: post.created })) },
     accounts,
     accounting: {
       type: "HiveLedgerDerivationRequired",

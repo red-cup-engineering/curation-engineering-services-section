@@ -43,8 +43,8 @@ function toBasicUtcDateTime(date) {
  * @throws {TypeError} When request.account is not a key of request.yieldReadout.accounts.
  */
 export function scheduleSetOfVotes(request) {
-  const { yieldReadout: yieldReport, account, candidatePosts } = request;
-  const accountMana = yieldReport?.accounts?.[account]?.votingManabar;
+  const { yieldReadout, account, candidatePosts } = request;
+  const accountMana = yieldReadout?.accounts?.[account]?.votingManabar;
   if (!accountMana) throw new TypeError(`schedule-set-of-votes: request.account ${account} is not a key of request.yieldReadout.accounts`);
   const policy = { ...DEFAULT_POLICY, ...(request.policy ?? {}) };
   const curationWindowSeconds = request.curationWindowSeconds;
@@ -53,7 +53,7 @@ export function scheduleSetOfVotes(request) {
   const currentManaRaw = BigInt(accountMana.currentManaRaw);
   const manaBudgetRaw = (currentManaRaw * BigInt(policy.dailyManaBudgetPercent)) / 100n;
   // Each tag's price per rshare as its recent posts realize it (pending payout per million net rshares).
-  const tagPrice = new Map((yieldReport.tags ?? []).map((tag) => {
+  const tagPrice = new Map((yieldReadout.tags ?? []).map((tag) => {
     const perMillion = tag.yieldHbdPerMillionRshares == null ? null : parseDecimalAmount(String(tag.yieldHbdPerMillionRshares));
     return [tag.tag, perMillion ? rationalOfBigInts(rationalParts(perMillion.value)[0], rationalParts(perMillion.value)[1] * 1_000_000n) : null];
   }));
@@ -99,7 +99,7 @@ export function scheduleSetOfVotes(request) {
     };
   });
   // A refusal names the post it refused; the post itself stays in the readout it was read from.
-  const rejected = selection.decisions.filter((decision) => !decision.accepted).map((decision) => {
+  const refused = selection.decisions.filter((decision) => !decision.accepted).map((decision) => {
     const { tag, post } = candidates.find((entry) => key(entry.observation) === decision.proposal.id);
     return { tag, author: post.author, permlink: post.permlink, reason: decision.reason };
   });
@@ -111,7 +111,7 @@ export function scheduleSetOfVotes(request) {
     manaBudgetRaw: manaBudgetRaw.toString(),
     manaBudgetPercent: policy.dailyManaBudgetPercent,
     scheduled,
-    refused: rejected,
+    refused,
   };
 }
 
