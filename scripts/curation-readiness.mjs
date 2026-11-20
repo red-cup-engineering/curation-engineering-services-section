@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+import { temporaryRoot } from "@red-cup-engineering/computer-file-engineering-services-section/temporary-directory";
+import { fileURLToPath } from "node:url";
 /**
  * Is the Hive shadow curator ready for the Leader to consider live voting? A read-only check of its journal: it writes nothing, votes for nothing and
  * authorizes nothing. Exit status: 0 the readiness gate passes, 1 it does not, 2 the journal could not be read or holds no settled decision.
@@ -17,7 +19,7 @@ import { assessShadowCurator } from "../src/shadow-curator.mjs";
 import { readShadowRows } from "../src/shadow-curator-journal.mjs";
 
 const { values } = parseArgs({ options: { data: { type: "string" }, alpha: { type: "string", default: "0.05" }, resamples: { type: "string", default: "2000" }, json: { type: "boolean", default: false } } });
-const data = values.data ?? process.env.HIVE_SHADOW_CURATOR_DATA ?? join(process.env.HOME ?? homedir(), ".local", "state", "561-group", "hive-shadow-curator");
+const data = values.data ?? process.env.HIVE_SHADOW_CURATOR_DATA ?? join(temporaryRoot(fileURLToPath(new URL(".", import.meta.url))), "..", "hive-shadow-curator-state");
 let rows, report;
 try {
   rows = readShadowRows(data);

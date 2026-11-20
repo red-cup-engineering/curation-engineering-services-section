@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { temporaryRoot } from "@red-cup-engineering/computer-file-engineering-services-section/temporary-directory";
 /**
  * The Hive shadow curator as a long-running process for a host to run as a unit: it fits the reward predictor once from the measurements this
  * package ships, then every interval records which recent posts it would vote on, and once a day records what the votes of closed payout windows
@@ -51,7 +52,7 @@ export async function runDaemon({ data, age = 3600, fraction = 0.5, own = 1e10, 
 
 if (import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) {
   const { values } = parseArgs({ options: { data: { type: "string" }, age: { type: "string", default: "3600" }, fraction: { type: "string", default: "0.5" }, own: { type: "string", default: "1e10" }, interval: { type: "string", default: "600" }, "settle-limit": { type: "string", default: "100" }, once: { type: "boolean", default: false } } });
-  const data = values.data ?? process.env.HIVE_SHADOW_CURATOR_DATA ?? join(process.env.HOME ?? homedir(), ".local", "state", "561-group", "hive-shadow-curator");
+  const data = values.data ?? process.env.HIVE_SHADOW_CURATOR_DATA ?? join(temporaryRoot(fileURLToPath(new URL(".", import.meta.url))), "..", "hive-shadow-curator-state");
   const controller = new AbortController();
   for (const s of ["SIGTERM", "SIGINT"]) process.once(s, () => controller.abort());
   await runDaemon({ data, age: Number(values.age), fraction: Number(values.fraction), own: Number(values.own), interval: Number(values.interval), settlementLimit: Number(values["settle-limit"]), signal: controller.signal, once: values.once });
