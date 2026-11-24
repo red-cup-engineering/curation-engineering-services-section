@@ -1,0 +1,22 @@
+{
+  "name": "@red-cup-engineering/curation-engineering-services-section",
+  "version": "0.3.2",
+  "type": "module",
+  "description": "Red Cup Engineering service section for Hive-Engine tribe curation yield, vote scheduling, and vote casting.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/red-cup-engineering/curation-engineering-services-section.git"
+  },
+  "files": [
+    "LICENSE",
+    "README.md",
+    "scripts/",
+    "src/"
+  ],
+  "dependencies": {
+    "@red-cup-engineering/prediction-engineering-services-section": "^0.2.0",
+    "@red-cup-engineering/semiotic-eavt-engineering-services-section": "0.6.10",
+    "@red-cup-engineering/computer-file-engineering-services-section": "^0.8.16"
+  }
+}

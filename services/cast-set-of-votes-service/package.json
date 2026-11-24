@@ -1,0 +1,42 @@
+{
+  "name": "@red-cup-engineering/cast-set-of-votes-service",
+  "version": "0.1.5-dev.0",
+  "description": "Submits bounded Hive curation votes through the fleet signer and retains a vote as executed only after two public nodes confirm its exact chain operation.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/red-cup-engineering/curation-engineering-services-section.git",
+    "directory": "services/cast-set-of-votes-service"
+  },
+  "type": "module",
+  "private": false,
+  "license": "MIT",
+  "exports": "./scripts/cast-set-of-votes.mjs",
+  "bin": {
+    "cast-set-of-votes": "scripts/cast-set-of-votes.mjs"
+  },
+  "files": [
+    "scripts",
+    "README.md",
+    "package.json"
+  ],
+  "dependencies": {
+    "@red-cup-engineering/computer-code-engineering-services-section": "^0.2.1",
+    "@red-cup-engineering/semiotic-eavt-engineering-services-section": "^0.6.10",
+    "@red-cup-engineering/eavt-engineering-services-section": "^0.15.1",
+    "@red-cup-engineering/hive-blockchain-client-service": "^0.1.6",
+    "@red-cup-engineering/hive-fleet-operations-service": "^0.4.19",
+    "@red-cup-engineering/node-js-function-engineering-services-section": "^0.5.4"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "check": "node --check scripts/cast-set-of-votes.mjs",
+    "pack:dry-run": "npm pack --dry-run --ignore-scripts"
+  },
+  "engines": {
+    "node": ">=24.2.0"
+  },
+  "funding": {
+    "type": "individual",
+    "url": "https://github.com/561-group/.github/blob/main/TIPS.md"
+  }
+}

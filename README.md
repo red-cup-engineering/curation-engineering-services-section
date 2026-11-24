@@ -1,0 +1,23 @@
+# Curation Services Section
+
+<!-- 561-group-standards:badges:start -->
+[![Red Cup Engineering](https://img.shields.io/badge/561%20Group-Red%20Cup%20Engineering-c0392b)](https://github.com/red-cup-engineering)
+[![License: MIT](https://img.shields.io/badge/license-MIT-c0392b)](LICENSE)
+[![Indigenous data: CARE](https://img.shields.io/badge/Indigenous%20data-CARE-4b6f44)](https://github.com/red-cup-engineering/.github/blob/main/GOVERNANCE.md)
+[![Tips welcome](https://img.shields.io/badge/tips-welcome-d4a017)](https://github.com/561-group/.github/blob/main/TIPS.md)
+<!-- 561-group-standards:badges:end -->
+
+Curation Services holds the org's no-capital Hive earning loop. `observe-tribe-curation-yield-service`
+produces two-node witnesses for candidate posts, curation price, and account voting mana;
+`schedule-set-of-votes-service` transforms only those observations and the declared mana/author/tag
+policy into bounded vote proposals; and `cast-set-of-votes-service` uses the fleet signer, then
+requires two nodes to prove the exact vote operation before treating it as executed. A broadcast
+that cannot be confirmed remains an explicit reconciliation item, not an earnings record. The
+separate Hive ledger derives income from chain history at `claim_reward_balance`; this curation
+loop never invents reward income from a vote prediction or a local journal.
+
+`run-hive-curation-cycle-service/scripts/execute-hive-curation-cycle.mjs` is the production
+one-shot: it uses the fleet's current curation policy rather than waiting for NDJSON input.
+In production the cycle is the `hive-curation-cycle` command, scheduled by the `metroplex:cold-red-gate`
+clock (`metroplat-clock.timer`, `run-due` each minute, on the host whose keystore holds the fleet's
+keys; the schedule lives in that metroplex's data, not an instance file); a missed occurrence is not replayed, and the command signs through the fleet's local signer.
