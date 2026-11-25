@@ -13,7 +13,7 @@ import { measureCurve, multiplierAt } from "../src/curation-curve.mjs";
 import { outcomeRecord, readRootPostsSince, readRpc } from "../src/hive-post-source.mjs";
 import { fitRewardPredictor } from "../src/reward-predictor.mjs";
 import { assessShadowCurator, decideShadowVotes, settleShadowVote } from "../src/shadow-curator.mjs";
-import { appendShadowRows, readShadowRows, sealShadowRows } from "../src/shadow-curator-journal.mjs";
+import { appendShadowRows, readShadowRows } from "../src/shadow-curator-journal.mjs";
 
 const text = (f) => (f.endsWith(".gz") ? gunzipSync(readFileSync(f)).toString("utf8") : readFileSync(f, "utf8"));
 const lines = (f) => (existsSync(f) ? text(f).trim().split("\n").filter(Boolean).map((l) => JSON.parse(l)) : []);
@@ -46,7 +46,6 @@ export async function run(argv, { fetchImpl = fetch, now = () => new Date(), set
     const observedAt = now();
     const rows = decideShadowVotes(candidates, predictor, { decidedAt: observedAt.toISOString(), selectFraction });
     appendShadowRows(values.data, rows, observedAt.toISOString());
-    sealShadowRows(values.data, observedAt);
     return { decided: rows.length, wouldVote: rows.filter((r) => r.wouldVote).length };
   }
   if (command === "settle") {
@@ -82,7 +81,6 @@ export async function run(argv, { fetchImpl = fetch, now = () => new Date(), set
       appendShadowRows(values.data, [{ ...settleShadowVote(d, post, predictor, multiplier), settledAt }], settledAt);
       settled += 1;
     }
-    sealShadowRows(values.data, now());
     const attempted = settled + unavailable + unpaid + failed;
     // Terminal rows exit the next pass's due list. Deferred rows still occupy their offsets.
     const nextOffset = settlementOffset + attempted < due.length ? settlementOffset + unpaid + failed : null;

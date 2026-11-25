@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { gunzipSync } from "node:zlib";
-import { append, logDates, readLog, sealLogs, withFileLock } from "@red-cup-engineering/semiotic-eavt-engineering-services-section/store";
+import { append, logDates, readLog, withFileLock } from "@red-cup-engineering/semiotic-eavt-engineering-services-section/store";
 
 const feed = "hive-shadow-curation";
 const day = 86_400_000;
@@ -39,16 +39,6 @@ export function appendShadowRows(data, rows, observedAt) {
     for (const date of logDates(root, feed)) {
       if (date > at.slice(0, 10)) at = `${date}T00:00:00.000Z`;
     }
-    for (const row of rows) append(root, feed, { at, row }, { seal: false });
-  });
-}
-
-/** Seal the completed polling pass, including the open tail of the current day. */
-export function sealShadowRows(data, now) {
-  const root = resolve(data);
-  return locked(root, () => {
-    let last = now.toISOString().slice(0, 10);
-    for (const date of logDates(root, feed)) last = date > last ? date : last;
-    return sealLogs(root, feed, { before: new Date(Date.parse(last) + day).toISOString().slice(0, 10) });
+    for (const row of rows) append(root, feed, { at, row });
   });
 }
